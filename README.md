@@ -11,7 +11,7 @@ To use this engine in your Rails application:
 
 1. Add this line to your application's Gemfile:
    ```ruby
-   gem 'coar-notify-inbox-rails-engine', git: 'https://github.com/your-org/coar-notify-inbox-rails-engine.git'
+   gem 'coar-notify-inbox-rails-engine', git: 'https://github.com/antleaf/coar-notify-inbox-rails-engine.git'
    ```
 
 2. Run `bundle install`:
