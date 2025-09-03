@@ -10,10 +10,6 @@ Gem::Specification.new do |spec|
   spec.description = "TODO: Description of CoarNotifyInbox."
   spec.license     = "MIT"
 
-  # Prevent pushing this gem to RubyGems.org. To allow pushes either set the "allowed_push_host"
-  # to allow pushing to a single host or delete this section to allow pushing to any host.
-  spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
-
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/antleaf/coar-notify-inbox-rails-engine"
   spec.metadata["changelog_uri"] = "https://github.com/antleaf/coar-notify-inbox-rails-engine/blob/main/CHANGELOG.md"
