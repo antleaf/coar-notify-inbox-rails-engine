@@ -7,3 +7,8 @@
 /.idea
 .DS_Store
 .nova
+/.bundle/
+/doc/
+/log/*.log
+/pkg/
+/tmp/
