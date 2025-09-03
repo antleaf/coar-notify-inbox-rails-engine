@@ -9,7 +9,7 @@ There is a [related Hyrax 5.2 integration GitHub repository](https://github.com/
 ## Usage
 To use this engine in your Rails application:
 
-1. Add this line to your application's Gemfile (replace the URL with your repository if using Git):
+1. Add this line to your application's Gemfile:
    ```ruby
    gem 'coar-notify-inbox-rails-engine', git: 'https://github.com/your-org/coar-notify-inbox-rails-engine.git'
    ```
