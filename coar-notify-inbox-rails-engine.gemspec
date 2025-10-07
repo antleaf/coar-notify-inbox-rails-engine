@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors     = [""]
   spec.email       = ["gyan@cottagelabs.com"]
   spec.homepage    = "https://github.com/antleaf/coar-notify-inbox-rails-engine"
-  spec.summary     = "TODO: Summary of CoarNotifyInbox."
-  spec.description = "TODO: Description of CoarNotifyInbox."
+  spec.summary     = "Summary of CoarNotifyInbox."
+  spec.description = "Description of CoarNotifyInbox."
   spec.license     = "MIT"
 
   spec.metadata["homepage_uri"] = spec.homepage
