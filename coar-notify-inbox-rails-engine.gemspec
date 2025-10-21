@@ -19,4 +19,5 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency "rails", ">= 6.0", "< 9.0"
+  spec.add_dependency "cancancan", "~> 3.5"
 end
