@@ -11,10 +11,13 @@ module CoarNotifyInbox
 
     before_validation :set_default_role, on: :create
 
+    has_many :senders, class_name: 'CoarNotifyInbox::Sender', dependent: :destroy
+    has_many :consumers, class_name: 'CoarNotifyInbox::Consumer', dependent: :destroy
+
     private
 
     def generate_auth_token
-      self.authm_token ||= SecureRandom.hex(20)
+      self.auth_token ||= SecureRandom.hex(20)
     end
 
     def set_default_role

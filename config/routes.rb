@@ -5,4 +5,9 @@ CoarNotifyInbox::Engine.routes.draw do
       patch :deactivate
     end
   end
+
+  namespace :coar_notify_inbox do
+    resources :senders
+    resources :consumers
+  end
 end
