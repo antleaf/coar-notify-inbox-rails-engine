@@ -9,6 +9,6 @@ class CreateCoarNotifyInboxUsers < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :users, :auth_token, unique: truel
+    add_index :users, :auth_token, unique: true
   end
 end
