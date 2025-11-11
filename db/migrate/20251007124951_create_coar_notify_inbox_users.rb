@@ -1,6 +1,6 @@
-class CreateCoreNotifyInboxUsers < ActiveRecord::Migration[8.0]
+class CreateCoarNotifyInboxUsers < ActiveRecord::Migration[8.0]
   def change
-    create_table :core_notify_inbox_users do |t|
+    create_table :coar_notify_inbox_users do |t|
       t.string :name
       t.string :auth_token
       t.integer :role
