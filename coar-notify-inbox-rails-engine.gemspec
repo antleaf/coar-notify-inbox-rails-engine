@@ -1,7 +1,7 @@
 require_relative "lib/coar_notify_inbox/version"
 
 Gem::Specification.new do |spec|
-  spec.name        = "coar-notify-inbox-rails-engine"
+  spec.name        = "coar-notify-inbox"
   spec.version     = CoarNotifyInbox::VERSION
   spec.authors     = [""]
   spec.email       = ["gyan@cottagelabs.com"]
