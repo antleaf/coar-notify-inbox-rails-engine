@@ -1,8 +1,6 @@
 # app/models/coar_notify_inbox/user.rb
 module CoarNotifyInbox
   class User < ApplicationRecord
-    self.table_name = "users"  # points to users table
-
     before_create :generate_auth_token
     enum role: { user: 0, admin: 1 }
 
