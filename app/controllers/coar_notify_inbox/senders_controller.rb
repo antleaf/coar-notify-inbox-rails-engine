@@ -41,17 +41,16 @@ module CoarNotifyInbox
       @sender = Sender.find(params[:id])
     end
 
-    # Handle association updates (OwnerTarget join table)
+    # Handle association updates (SenderTarget join table)
     def update_targets(sender)
       return unless params[:targets].present?
 
       target_ids = params[:targets].map { |t| t[:id] }.compact
 
-      # Replace existing associations cleanly
-      sender.owner_targets.destroy_all
+      sender.sender_targets.destroy_all
 
       target_ids.each do |tid|
-        sender.owner_targets.create(target_id: tid)
+        sender.sender_targets.create(target_id: tid)
       end
     end
 
