@@ -2,7 +2,8 @@
 module CoarNotifyInbox
   class User < ApplicationRecord
     before_create :generate_auth_token
-    enum role: { user: 0, admin: 1 }
+
+    enum :role, { user: 0, admin: 1 }
 
     validates :name, presence: true
     validates :auth_token, uniqueness: true

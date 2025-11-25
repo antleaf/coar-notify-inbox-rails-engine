@@ -6,8 +6,6 @@ CoarNotifyInbox::Engine.routes.draw do
     end
   end
 
-  namespace :coar_notify_inbox do
-    resources :senders
-    resources :consumers
-  end
+  resources :senders
+  resources :consumers
 end

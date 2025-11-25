@@ -1,7 +1,5 @@
-GIT
-  remote: https://github.com/antleaf/coar-notify-inbox-rails-engine.git
-  revision: 79b29aa3868760974fa1c4c9750330bbfda30e25
-  branch: main
+PATH
+  remote: ..
   specs:
     coar_notify_inbox (0.1.0)
       cancancan (~> 3.5)
