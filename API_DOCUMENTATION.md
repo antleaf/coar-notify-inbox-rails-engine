@@ -6,7 +6,7 @@ The COAR Notify Inbox API is a Rails engine providing a complete COAR Notify Inb
 
 **Base URL:** `{base_url}/coar_notify_inbox`
 
-Replace `{base_url}` with your actual server address (e.g., `http://localhost:3000`, `https://api.example.com`)
+Replace `{base_url}` with your actual server address (e.g., `{base_url}`, `https://api.example.com`)
 
 **API Version:** 1.0.0
 
@@ -40,7 +40,7 @@ Authorization: Bearer {auth_token}
 Create a new user to obtain an `auth_token`:
 
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/users \
+curl -X POST {base_url}/coar_notify_inbox/users \
   -H "Content-Type: application/json" \
   -d '{"user": {"name": "Your Name"}}'
 ```
@@ -113,7 +113,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/users \
+curl -X POST {base_url}/coar_notify_inbox/users \
   -H "Content-Type: application/json" \
   -d '{"user": {"name": "John Doe"}}'
 ```
@@ -156,7 +156,7 @@ Authorization: Bearer {auth_token}
 
 **Example:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/users \
+curl -X GET {base_url}/coar_notify_inbox/users \
   -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
 ```
 
@@ -204,7 +204,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X PATCH http://localhost:3000/coar_notify_inbox/users/1/activate \
+curl -X PATCH {base_url}/coar_notify_inbox/users/1/activate \
   -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -248,7 +248,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X PATCH http://localhost:3000/coar_notify_inbox/users/1/deactivate \
+curl -X PATCH {base_url}/coar_notify_inbox/users/1/deactivate \
   -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -313,7 +313,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/senders \
+curl -X POST {base_url}/coar_notify_inbox/senders \
   -H "Content-Type: application/json" \
   -d '{"sender": {"user_id": 1}}'
 ```
@@ -353,7 +353,7 @@ GET /senders
 
 **Example:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/senders
+curl -X GET {base_url}/coar_notify_inbox/senders
 ```
 
 ---
@@ -399,7 +399,7 @@ GET /senders/{id}
 
 **Example:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/senders/1
+curl -X GET {base_url}/coar_notify_inbox/senders/1
 ```
 
 ---
@@ -460,7 +460,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/senders/1 \
+curl -X PUT {base_url}/coar_notify_inbox/senders/1 \
   -H "Content-Type: application/json" \
   -d '{"sender": {"user_id": 1, "origin_id": 1}, "targets": [{"id": 1}]}'
 ```
@@ -491,7 +491,7 @@ DELETE /senders/{id}
 
 **Example:**
 ```bash
-curl -X DELETE http://localhost:3000/coar_notify_inbox/senders/1
+curl -X DELETE {base_url}/coar_notify_inbox/senders/1
 ```
 
 ---
@@ -550,7 +550,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/consumers \
+curl -X POST {base_url}/coar_notify_inbox/consumers \
   -H "Content-Type: application/json" \
   -d '{"consumer": {"user_id": 1}}'
 ```
@@ -588,7 +588,7 @@ GET /consumers
 
 **Example:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/consumers
+curl -X GET {base_url}/coar_notify_inbox/consumers
 ```
 
 ---
@@ -625,7 +625,7 @@ GET /consumers/{id}
 
 **Example:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/consumers/1
+curl -X GET {base_url}/coar_notify_inbox/consumers/1
 ```
 
 ---
@@ -684,7 +684,7 @@ Content-Type: application/json
 
 **Example:**
 ```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/consumers/1 \
+curl -X PUT {base_url}/coar_notify_inbox/consumers/1 \
   -H "Content-Type: application/json" \
   -d '{"consumer": {"user_id": 1}}'
 ```
@@ -715,7 +715,7 @@ DELETE /consumers/{id}
 
 **Example:**
 ```bash
-curl -X DELETE http://localhost:3000/coar_notify_inbox/consumers/1
+curl -X DELETE {base_url}/coar_notify_inbox/consumers/1
 ```
 
 ---
@@ -821,7 +821,7 @@ The API uses standard HTTP status codes to indicate the success or failure of re
 
 **1. Create a new user:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/users \
+curl -X POST {base_url}/coar_notify_inbox/users \
   -H "Content-Type: application/json" \
   -d '{"user": {"name": "Alice Smith"}}'
 ```
@@ -842,13 +842,13 @@ Response:
 
 **2. List all users:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/users \
+curl -X GET {base_url}/coar_notify_inbox/users \
   -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
 ```
 
 **3. Deactivate the user:**
 ```bash
-curl -X PATCH http://localhost:3000/coar_notify_inbox/users/1/deactivate \
+curl -X PATCH {base_url}/coar_notify_inbox/users/1/deactivate \
   -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
   -H "Content-Type: application/json" \
   -d '{}'
@@ -860,7 +860,7 @@ curl -X PATCH http://localhost:3000/coar_notify_inbox/users/1/deactivate \
 
 **1. Create a sender:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/senders \
+curl -X POST {base_url}/coar_notify_inbox/senders \
   -H "Content-Type: application/json" \
   -d '{"sender": {"user_id": 1}}'
 ```
@@ -878,12 +878,12 @@ Response:
 
 **2. Get sender details:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/senders/5
+curl -X GET {base_url}/coar_notify_inbox/senders/5
 ```
 
 **3. Update sender with targets:**
 ```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/senders/5 \
+curl -X PUT {base_url}/coar_notify_inbox/senders/5 \
   -H "Content-Type: application/json" \
   -d '{
     "sender": {"user_id": 1},
@@ -893,7 +893,7 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/senders/5 \
 
 **4. Delete sender:**
 ```bash
-curl -X DELETE http://localhost:3000/coar_notify_inbox/senders/5
+curl -X DELETE {base_url}/coar_notify_inbox/senders/5
 ```
 
 ---
@@ -902,7 +902,7 @@ curl -X DELETE http://localhost:3000/coar_notify_inbox/senders/5
 
 **1. Create a consumer:**
 ```bash
-curl -X POST http://localhost:3000/coar_notify_inbox/consumers \
+curl -X POST {base_url}/coar_notify_inbox/consumers \
   -H "Content-Type: application/json" \
   -d '{"consumer": {"user_id": 1}}'
 ```
@@ -919,19 +919,19 @@ Response:
 
 **2. Get all consumers:**
 ```bash
-curl -X GET http://localhost:3000/coar_notify_inbox/consumers
+curl -X GET {base_url}/coar_notify_inbox/consumers
 ```
 
 **3. Update consumer:**
 ```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/consumers/3 \
+curl -X PUT {base_url}/coar_notify_inbox/consumers/3 \
   -H "Content-Type: application/json" \
   -d '{"consumer": {"user_id": 2}}'
 ```
 
 **4. Delete consumer:**
 ```bash
-curl -X DELETE http://localhost:3000/coar_notify_inbox/consumers/3
+curl -X DELETE {base_url}/coar_notify_inbox/consumers/3
 ```
 
 ---
