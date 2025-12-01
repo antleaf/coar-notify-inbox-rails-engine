@@ -1,39 +1,45 @@
 module CoarNotifyInbox
   class ConsumersController < ApplicationController
     before_action :set_consumer, only: [:show, :update, :destroy]
+    load_and_authorize_resource
 
-    # GET /coar_notify_inbox/consumers
+    # GET /consumers
     def index
-      @consumers = Consumer.all
-      render json: @consumers
+      render json: @consumers, include: [:origins, :target]
     end
 
-    # GET /coar_notify_inbox/consumers/:id
+    # GET /consumers/:id
     def show
-      render json: @consumer
+      render json: @consumer, include: [:origins, :target]
     end
 
-    # POST /coar_notify_inbox/consumers
+    # POST /consumers
     def create
       @consumer = Consumer.new(consumer_params)
+      @consumer.user = current_user
+
+      process_origins(@consumer)
 
       if @consumer.save
-        render json: @consumer, status: :created
+        render json: @consumer, status: :created, include: [:origins, :target]
       else
         render json: { errors: @consumer.errors.full_messages }, status: :unprocessable_entity
       end
     end
 
-    # PATCH/PUT /coar_notify_inbox/consumers/:id
+    # PUT /consumers/:id
     def update
-      if @consumer.update(consumer_params)
-        render json: @consumer
+      @consumer.assign_attributes(consumer_params)
+      process_origins(@consumer)
+
+      if @consumer.save
+        render json: @consumer, include: [:origins, :target]
       else
         render json: { errors: @consumer.errors.full_messages }, status: :unprocessable_entity
       end
     end
 
-    # DELETE /coar_notify_inbox/consumers/:id
+    # DELETE /consumers/:id
     def destroy
       @consumer.destroy
       head :no_content
@@ -45,8 +51,23 @@ module CoarNotifyInbox
       @consumer = Consumer.find(params[:id])
     end
 
+    # Strong parameters
     def consumer_params
-      params.require(:consumer).permit(:user_id, :origin_id)
+      params.require(:consumer).permit(:user_id, :active)
+    end
+
+    # Handle multiple origins
+    def process_origins(consumer)
+      return unless params[:origin_attributes].present?
+
+      origin_uris = params[:origin_attributes].values.map { |o| o[:uri] }
+
+      consumer.consumer_origins.destroy_all
+
+      origin_uris.each do |uri|
+        origin = CoarNotifyInbox::Origin.find_or_create_by(uri: uri)
+        consumer.consumer_origins.create(origin: origin)
+      end
     end
   end
 end
