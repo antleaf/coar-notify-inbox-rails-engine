@@ -8,4 +8,10 @@ CoarNotifyInbox::Engine.routes.draw do
 
   resources :senders
   resources :consumers
+  resources :notification_types
+  resources :notifications, only: [:index, :create] do
+    collection do
+      get :search
+    end
+  end
 end
