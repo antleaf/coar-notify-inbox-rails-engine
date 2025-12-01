@@ -27,9 +27,11 @@ Replace `{base_url}` with your actual server address (e.g., `{base_url}`, `https
 ## Authentication
 
 ### Overview
+
 The API uses token-based authentication via Authorization headers. An `auth_token` is automatically generated when a user is created.
 
 ### Using Auth Token
+
 Include the token in the Authorization header for authenticated endpoints:
 
 ```
@@ -37,6 +39,7 @@ Authorization: Bearer {auth_token}
 ```
 
 ### Getting a Token
+
 Create a new user to obtain an `auth_token`:
 
 ```bash
@@ -46,6 +49,7 @@ curl -X POST {base_url}/coar_notify_inbox/users \
 ```
 
 The response includes the `auth_token`:
+
 ```json
 {
   "message": "User created",
@@ -66,6 +70,7 @@ The Users API manages user accounts and their activation states.
 Creates a new user with automatic role assignment (`user`) and active status (`true`).
 
 **Request:**
+
 ```
 POST /users
 Content-Type: application/json
@@ -73,11 +78,12 @@ Content-Type: application/json
 
 **Parameters:**
 
-| Parameter | Type   | Required | Description          |
-|-----------|--------|----------|----------------------|
-| name      | string | Yes      | User's display name  |
+| Parameter | Type   | Required | Description         |
+| --------- | ------ | -------- | ------------------- |
+| name      | string | Yes      | User's display name |
 
 **Request Body:**
+
 ```json
 {
   "user": {
@@ -87,8 +93,10 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 - **Status Code:** `201 Created`
 - **Body:**
+
 ```json
 {
   "message": "User created",
@@ -103,8 +111,10 @@ Content-Type: application/json
 ```
 
 **Error Response:**
+
 - **Status Code:** `422 Unprocessable Entity`
 - **Body (Empty name):**
+
 ```json
 {
   "errors": ["Name can't be blank"]
@@ -112,844 +122,341 @@ Content-Type: application/json
 ```
 
 **Example:**
+
 ```bash
 curl -X POST {base_url}/coar_notify_inbox/users \
   -H "Content-Type: application/json" \
-  -d '{"user": {"name": "John Doe"}}'
-```
+  # COAR Notify Inbox API Documentation
 
----
+  ## Overview
 
-#### 2. Get All Users
+  This document describes the public COAR Notify Inbox API: users, senders, consumers, and notifications. It includes authentication rules, payloads, and role-based behavior (admin vs user).
 
-Retrieves a list of all users in the system.
+  **Base URL:** `{base_url}/coar_notify_inbox`
 
-**Request:**
-```
-GET /users
-Authorization: Bearer {auth_token}
-```
+  **API Version:** 1.0.0
 
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-[
+  ---
+
+  ## Quick Reference
+  - Authentication: `Authorization: Bearer {auth_token}` header required for protected endpoints.
+  - Admins can manage other users, enable/disable resources, and view all notifications.
+  - Regular users can manage their own senders/consumers and view resources they own.
+
+  ---
+
+  ## Table Of Contents
+
+  1. [Authentication](#authentication)
+  2. [Users API](#users-api)
+  3. [Senders API](#senders-api)
+  4. [Consumers API](#consumers-api)
+  5. [Notifications API](#notifications-api)
+  6. [Response & Error Formats](#response--error-formats)
+  7. [Examples](#examples)
+
+  ---
+
+  ## Authentication
+
+  All protected endpoints require an `Authorization` header with a Bearer token:
+
+  ```
+  Authorization: Bearer {auth_token}
+  ```
+
+  The `auth_token` is automatically generated when a user is created. Admins and active users have tokens.
+
+  Where an endpoint requires an admin token, this is explicitly documented.
+
+  ---
+
+  ## Users API
+
+  Admin users manage users. Regular users can modify their own profile and regenerate their token.
+
+  Base path: `/users`
+
+  ### Create first admin user (command line)
+
+  To bootstrap the system, create the first admin user from the Rails console. Example:
+
+  ```ruby
+  # in rails console
+  CoarNotifyInbox::User.create!(name: 'Admin User', role: :admin, active: true)
+  # The auth_token will be generated automatically on create
+  ```
+
+  ### Endpoints
+
+  #### List users
+  - Method: `GET /users`
+  - Auth: admin `auth_token` required
+  - Returns: list of users (all users for admin)
+
+  #### Create a user
+  - Method: `POST /users`
+  - Auth: admin `auth_token` required
+  - Payload fields accepted (server may store different internal fields):
+    - `username` (optional external identifier)
+    - `name` (required)
+    - `active` (optional, default: `false` unless admin sets `true`)
+    - `type` (optional, e.g., `Person`)
+
+  Example request body:
+
+  ```json
   {
-    "id": 1,
-    "name": "John Doe",
-    "role": "user",
-    "active": true,
-    "created_at": "2025-11-26T10:30:00.000Z",
-    "updated_at": "2025-11-26T10:30:00.000Z"
-  },
-  {
-    "id": 2,
-    "name": "Jane Smith",
-    "role": "user",
-    "active": false,
-    "created_at": "2025-11-26T10:35:00.000Z",
-    "updated_at": "2025-11-26T10:45:00.000Z"
-  }
-]
-```
-
-**Example:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/users \
-  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
-```
-
----
-
-#### 3. Activate User
-
-Activates a user account (sets `active` to `true`).
-
-**Request:**
-```
-PATCH /users/{id}/activate
-Authorization: Bearer {auth_token}
-Content-Type: application/json
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | User ID     |
-
-**Request Body:**
-```json
-{}
-```
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "message": "User activated successfully"
-}
-```
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-- **Body:**
-```json
-{
-  "error": "Not Found"
-}
-```
-
-**Example:**
-```bash
-curl -X PATCH {base_url}/coar_notify_inbox/users/1/activate \
-  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
----
-
-#### 4. Deactivate User
-
-Deactivates a user account (sets `active` to `false`).
-
-**Request:**
-```
-PATCH /users/{id}/deactivate
-Authorization: Bearer {auth_token}
-Content-Type: application/json
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | User ID     |
-
-**Request Body:**
-```json
-{}
-```
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "message": "User deactivated successfully"
-}
-```
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-
-**Example:**
-```bash
-curl -X PATCH {base_url}/coar_notify_inbox/users/1/deactivate \
-  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
----
-
-## Senders API
-
-The Senders API manages sender entities that can send notifications. A sender belongs to a user and can be associated with multiple targets.
-
-### Endpoints
-
-#### 1. Create Sender
-
-Creates a new sender associated with a user and optionally an origin.
-
-**Request:**
-```
-POST /senders
-Content-Type: application/json
-```
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description                              |
-|-----------|---------|----------|------------------------------------------|
-| user_id   | integer | Yes      | ID of the user who owns this sender      |
-| origin_id | integer | No       | ID of the origin (COAR notify origin)    |
-
-**Request Body:**
-```json
-{
-  "sender": {
-    "user_id": 1,
-    "origin_id": null
-  }
-}
-```
-
-**Response:**
-- **Status Code:** `201 Created`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "origin_id": null,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
-
-**Error Response (Invalid User):**
-- **Status Code:** `422 Unprocessable Entity`
-- **Body:**
-```json
-{
-  "errors": ["User must exist"]
-}
-```
-
-**Example:**
-```bash
-curl -X POST {base_url}/coar_notify_inbox/senders \
-  -H "Content-Type: application/json" \
-  -d '{"sender": {"user_id": 1}}'
-```
-
----
-
-#### 2. Get All Senders
-
-Retrieves a list of all senders in the system.
-
-**Request:**
-```
-GET /senders
-```
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "origin_id": null,
-    "created_at": "2025-11-26T10:30:00.000Z",
-    "updated_at": "2025-11-26T10:30:00.000Z"
-  },
-  {
-    "id": 2,
-    "user_id": 2,
-    "origin_id": 1,
-    "created_at": "2025-11-26T10:35:00.000Z",
-    "updated_at": "2025-11-26T10:35:00.000Z"
-  }
-]
-```
-
-**Example:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/senders
-```
-
----
-
-#### 3. Get Sender by ID
-
-Retrieves a specific sender and includes its associated targets.
-
-**Request:**
-```
-GET /senders/{id}
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | Sender ID   |
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "origin_id": null,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z",
-  "targets": [
-    {
-      "id": 1,
-      "uri": "https://example.com/target/1",
-      "created_at": "2025-11-26T10:30:00.000Z",
-      "updated_at": "2025-11-26T10:30:00.000Z"
+    "user": {
+      "username": "mailto:josiah.carberry@example.com",
+      "name": "Josiah Carberry",
+      "type": "Person",
+      "active": false
     }
-  ]
-}
-```
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-
-**Example:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/senders/1
-```
-
----
-
-#### 4. Update Sender
-
-Updates a sender's properties and optionally associates targets.
-
-**Request:**
-```
-PUT /senders/{id}
-Content-Type: application/json
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | Sender ID   |
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description                         |
-|-----------|---------|----------|-------------------------------------|
-| user_id   | integer | No       | ID of the user who owns this sender |
-| origin_id | integer | No       | ID of the origin                    |
-| targets   | array   | No       | Array of target objects with IDs    |
-
-**Request Body:**
-```json
-{
-  "sender": {
-    "user_id": 1,
-    "origin_id": 1
-  },
-  "targets": [
-    { "id": 1 },
-    { "id": 2 }
-  ]
-}
-```
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "origin_id": 1,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:40:00.000Z"
-}
-```
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-
-**Example:**
-```bash
-curl -X PUT {base_url}/coar_notify_inbox/senders/1 \
-  -H "Content-Type: application/json" \
-  -d '{"sender": {"user_id": 1, "origin_id": 1}, "targets": [{"id": 1}]}'
-```
-
----
-
-#### 5. Delete Sender
-
-Deletes a sender and all associated sender-target relationships.
-
-**Request:**
-```
-DELETE /senders/{id}
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | Sender ID   |
-
-**Response:**
-- **Status Code:** `204 No Content`
-- **Body:** (empty)
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-
-**Example:**
-```bash
-curl -X DELETE {base_url}/coar_notify_inbox/senders/1
-```
-
----
-
-## Consumers API
-
-The Consumers API manages consumer entities that can receive notifications. A consumer belongs to a user and can be associated with multiple targets.
-
-### Endpoints
-
-#### 1. Create Consumer
-
-Creates a new consumer associated with a user.
-
-**Request:**
-```
-POST /consumers
-Content-Type: application/json
-```
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description                                |
-|-----------|---------|----------|--------------------------------------------|
-| user_id   | integer | Yes      | ID of the user who owns this consumer      |
-
-**Request Body:**
-```json
-{
-  "consumer": {
-    "user_id": 1
   }
-}
-```
+  ```
 
-**Response:**
-- **Status Code:** `201 Created`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
+  On success the server returns `201 Created` and an `auth_token` is generated:
 
-**Error Response (Invalid User):**
-- **Status Code:** `422 Unprocessable Entity`
-- **Body:**
-```json
-{
-  "errors": ["User must exist"]
-}
-```
-
-**Example:**
-```bash
-curl -X POST {base_url}/coar_notify_inbox/consumers \
-  -H "Content-Type: application/json" \
-  -d '{"consumer": {"user_id": 1}}'
-```
-
----
-
-#### 2. Get All Consumers
-
-Retrieves a list of all consumers in the system.
-
-**Request:**
-```
-GET /consumers
-```
-
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-[
+  ```json
   {
-    "id": 1,
-    "user_id": 1,
-    "created_at": "2025-11-26T10:30:00.000Z",
-    "updated_at": "2025-11-26T10:30:00.000Z"
-  },
+    "message": "User created",
+    "auth_token": "<auto-generated-token>",
+    "id": "mailto:josiah.carberry@example.com",
+    "name": "Josiah Carberry",
+    "active": false,
+    "type": "Person"
+  }
+  ```
+
+  Notes:
+  - If `active` is omitted when a regular user creates (or admin creates but does not set active), it defaults to `false`.
+  - Only admin users can set `active: true` when creating or updating other users.
+
+  #### Modify user
+  - Method: `PUT /users/{id}`
+  - Auth: admin `auth_token` or the user's own `auth_token`
+  - Body fields: `name`, `active` (only admin may set `active: true`)
+
+  Example:
+  ```json
   {
-    "id": 2,
-    "user_id": 2,
-    "created_at": "2025-11-26T10:35:00.000Z",
-    "updated_at": "2025-11-26T10:35:00.000Z"
+    "user": { "name": "Josiah C.", "active": true }
   }
-]
-```
+  ```
 
-**Example:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/consumers
-```
+  #### Regenerate auth token
+  - Method: `PUT /users/{id}/auth_token`
+  - Auth: admin `auth_token` or the user's own (old) `auth_token`
+  - Purpose: rotate/regenerate the user's token
+  - Response: returns new `auth_token`
 
----
+  #### Get user
+  - Method: `GET /users/{id}`
+  - Auth: admin `auth_token` or the user's own `auth_token`
 
-#### 3. Get Consumer by ID
+  #### Delete user (deferred)
+  - Method: `DELETE /users/{id}` (to be implemented later)
+  - Rules: only admin; user must be inactive and not referenced by other resources
 
-Retrieves a specific consumer.
+  ---
 
-**Request:**
-```
-GET /consumers/{id}
-```
+  ## Senders API
 
-**Path Parameters:**
+  Senders represent the origin side of notification flows. Both admins and users can register senders; admins may create senders for other users.
 
-| Parameter | Type    | Required | Description  |
-|-----------|---------|----------|--------------|
-| id        | integer | Yes      | Consumer ID  |
+  Base path: `/senders`
 
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
+  ### Create sender
+  - Method: `POST /senders`
+  - Auth: `Authorization: Bearer {auth_token}` required
+    - If token belongs to admin, the payload may include `username` to create sender for another user.
+    - If token belongs to normal user, sender is created for `current_user`.
+  - Payload:
+    - `user_name` or `user_id` (optional, admin only)
+    - `origin_uri` (required)
+    - `target_uris` (array) (optional)
+    - `active` (boolean) — only admin may set `true`; otherwise defaults to `false`
 
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
+  Rules:
+  - The combination of `user_id` and `origin_uri` must be unique.
+  - If the pair exists, the API allows updating target URIs but will not create a duplicate sender.
+  - The user for whom the sender is created must be active.
 
-**Example:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/consumers/1
-```
+  Example body:
 
----
-
-#### 4. Update Consumer
-
-Updates a consumer's properties.
-
-**Request:**
-```
-PUT /consumers/{id}
-Content-Type: application/json
-```
-
-**Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | Consumer ID |
-
-**Parameters:**
-
-| Parameter | Type    | Required | Description                              |
-|-----------|---------|----------|------------------------------------------|
-| user_id   | integer | Yes      | ID of the user who owns this consumer    |
-
-**Request Body:**
-```json
-{
-  "consumer": {
-    "user_id": 1
+  ```json
+  {
+    "sender": {
+      "origin_uri": "https://origin.example/1",
+      "target_uris": ["https://target.example/1", "https://target.example/2"],
+      "active": false
+    }
   }
-}
-```
+  ```
 
-**Response:**
-- **Status Code:** `200 OK`
-- **Body:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:40:00.000Z"
-}
-```
+  ### List senders
+  - Method: `GET /senders`
+  - Auth: `Authorization: Bearer {auth_token}` required
+  - Behavior:
+    - Admin token: returns all senders
+    - User token: returns only senders for that user
 
-**Error Response (Invalid User):**
-- **Status Code:** `422 Unprocessable Entity`
-- **Body:**
-```json
-{
-  "errors": ["User must exist"]
-}
-```
+  ### Get sender
+  - Method: `GET /senders/{id}`
+  - Auth: admin or owner user
 
-**Example:**
-```bash
-curl -X PUT {base_url}/coar_notify_inbox/consumers/1 \
-  -H "Content-Type: application/json" \
-  -d '{"consumer": {"user_id": 1}}'
-```
+  ### Update sender
+  - Method: `PUT /senders/{id}`
+  - Auth: admin or owner user
+  - Can update `target_uris`. Only admin may set `active: true`. Both admin and user can set `active: false`.
 
----
+  ### Delete sender (deferred)
+  - Method: `DELETE /senders/{id}` (to be implemented later)
 
-#### 5. Delete Consumer
+  ---
 
-Deletes a consumer and all associated consumer-target relationships.
+  ## Consumers API
 
-**Request:**
-```
-DELETE /consumers/{id}
-```
+  Consumers represent endpoints that receive notifications (the consumer's target URI). Admins and users can register consumers; admins may register on behalf of others.
 
+  Base path: `/consumers`
+
+  ### Create consumer
+  - Method: `POST /consumers`
+  - Auth: `Authorization: Bearer {auth_token}` required
+  - Payload:
+    - `target_uri` (required) — a single target URI per consumer
+    - `origin_uris` (array) — origins the consumer will accept
+    - `user_name` or `user_id` (optional, admin only)
+    - `active` (boolean) — only admin may set `true`; otherwise defaults to `false`
+
+  Rules:
+  - The combination of `user_id` and `target_uri` must be unique.
+  - If a consumer exists for the pair, the API will allow updating the consumer's origins but not creating a duplicate.
+
+  ### List consumers
+  - Method: `GET /consumers`
+  - Auth: `Authorization: Bearer {auth_token}` required
+  - Admins see all; users see only their own
+
+  ### Get consumer
+  - Method: `GET /consumers/{id}`
+  - Auth: admin or owner user
+
+  ### Update consumer
+  - Method: `PUT /consumers/{id}`
+  - Auth: admin or owner user
+  - Can update `origin_uris`. Only admin may set `active: true`.
+
+  ---
+
+  ## Notifications API
+
+  Notifications are created by senders and delivered to consumers. The API validates that the origin belongs to the sender (the authenticated user) and that the target matches a consumer.
+
+  Base path: `/notifications`
+
+  ### Create notification
+  - Method: `POST /notifications`
+  - Auth: `Authorization: Bearer {auth_token}` — token must belong to a user who is a sender for the provided `origin_uri`.
+  - Payload fields:
+    - `origin_uri` (string) — required
+    - `target_uri` (string) — required
+    - `type` (string) — notification type identifier (must exist in `notification_types`)
+    - `payload` (JSON object) — actual notification content
+
+  Validation steps (server):
+  1. Authenticate `auth_token` and ensure user is active.
+  2. Verify `origin_uri` exists and is configured for the authenticated user as a sender.
+  3. Verify `target_uri` exists or create it as needed.
+  4. Verify `type` exists in `notification_types`.
+  5. If a matching notification already exists for (user, type, origin, target) return `303 See Other`. Otherwise create and return `201 Created`.
+
+  Return codes:
+  - `201 Created` — created successfully
+  - `303 See Other` — resource already exists (idempotency)
+  - `400` / `422` — validation or payload error
+
+  ### List notifications
+  - Method: `GET /notifications`
+  - Auth: `Authorization: Bearer {auth_token}` required
+  - Admins: return all notifications. Users: return notifications where `user_id` equals the authenticated user.
+
+  ### Search / Filter notifications
+  - Method: `GET /notifications/search`
+  - Query params: `type` (sender|consumer) and/or `uri` (origin or target URI)
+  - Behavior:
+    - Both `type` and `uri` provided: filter accordingly (type=sender matches origin_uri; type=consumer matches target_uri)
+    - Only `uri` provided: search notifications where either origin or target matches the uri
+    - Only `type` provided (no uri): no-op (returns empty) — the API requires a uri to filter on a type
+
+  Examples:
+
+  ```
+  GET /notifications/search?type=sender&uri=https://origin.example/1
+  GET /notifications/search?type=consumer&uri=https://target.example/1
+  GET /notifications/search?uri=https://example.com/some/uri
+  ```
+
+  ---
+
+  ## Response & Error Formats
+
+  Successful responses are JSON. Errors use the following conventions:
+
+  - `422 Unprocessable Entity` — validation errors, response body:
+
+  ```json
+  { "errors": ["field can't be blank"] }
+  ```
+
+  - `401 Unauthorized` — missing or invalid auth token
+  - `403 Forbidden` — authenticated but not permitted
+  - `404 Not Found` — resource not found
+  - `303 See Other` — resource already exists (idempotent create)
+
+  ---
+
+  ## Examples
+
+  Create notification (sender must be authenticated and own the origin):
+
+  ```bash
+  curl -X POST {base_url}/coar_notify_inbox/notifications \
+    -H "Authorization: Bearer {auth_token}" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "origin_uri": "https://origin.example/1",
+      "target_uri": "https://target.example/1",
+      "type": "review",
+      "payload": { "message": "Document updated" }
+    }'
+  ```
+
+  List notifications (admin sees all, user sees own):
+
+  ```bash
+  curl -X GET {base_url}/coar_notify_inbox/notifications \
+    -H "Authorization: Bearer {auth_token}"
+  ```
+
+  Search notifications by origin:
+
+  ```bash
+  curl -X GET "{base_url}/coar_notify_inbox/notifications/search?type=sender&uri=https://origin.example/1" \
+    -H "Authorization: Bearer {auth_token}"
+  ```
+
+  ---
+
+  ## Appendix & Notes
+
+  - The API is intentionally minimal in the payloads it accepts from clients; the server sets sensible defaults (e.g., `auth_token`) and enforces relationships (user active, sender origin ownership, unique constraints).
+  - If you need different payload shapes (e.g., nested `consumer[target_uri]` or simple arrays for `origin_uris/target_uris`) we can adapt the controllers and update the documentation accordingly.
+
+  ---
+
+  **Last Updated:** December 01, 2025  
+  **API Version:** 1.0.0
 **Path Parameters:**
-
-| Parameter | Type    | Required | Description |
-|-----------|---------|----------|-------------|
-| id        | integer | Yes      | Consumer ID |
-
-**Response:**
-- **Status Code:** `204 No Content`
-- **Body:** (empty)
-
-**Error Response (Not Found):**
-- **Status Code:** `404 Not Found`
-
-**Example:**
-```bash
-curl -X DELETE {base_url}/coar_notify_inbox/consumers/1
-```
-
----
-
-## Response Format
-
-### Success Response
-
-All successful responses follow a consistent JSON format:
-
-```json
-{
-  "id": 1,
-  "name": "Resource Name",
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
-
-### List Response
-
-List endpoints return an array of resources:
-
-```json
-[
-  { "id": 1, "name": "Resource 1", "created_at": "...", "updated_at": "..." },
-  { "id": 2, "name": "Resource 2", "created_at": "...", "updated_at": "..." }
-]
-```
-
-### Empty Response
-
-Some endpoints return no body with a 204 status code on successful deletion:
-
-```
-Status: 204 No Content
-Body: (empty)
-```
-
----
-
-## Error Handling
-
-The API uses standard HTTP status codes to indicate the success or failure of requests.
-
-### Status Codes
-
-| Status Code | Meaning                  | Description                                        |
-|-------------|--------------------------|-----------------------------------------------------|
-| 200         | OK                       | Request successful, data returned                  |
-| 201         | Created                  | Resource successfully created                      |
-| 204         | No Content               | Request successful, no data returned (e.g., delete)|
-| 400         | Bad Request              | Invalid request format or malformed JSON            |
-| 404         | Not Found                | Resource does not exist                            |
-| 422         | Unprocessable Entity     | Request data fails validation                      |
-| 500         | Internal Server Error    | Server error occurred                              |
-
-### Error Response Format
-
-#### Validation Error (422)
-
-```json
-{
-  "errors": [
-    "Name can't be blank",
-    "User must exist"
-  ]
-}
-```
-
-#### Not Found Error (404)
-
-```json
-{
-  "error": "Not Found"
-}
-```
-
-#### Invalid JSON (400)
-
-```json
-{
-  "error": "Invalid JSON"
-}
-```
-
-### Common Errors
-
-| Scenario                      | Status | Error Message                          |
-|-------------------------------|--------|----------------------------------------|
-| Missing required field        | 422    | `[field] can't be blank`               |
-| Invalid foreign key           | 422    | `[Model] must exist`                   |
-| Duplicate unique value        | 422    | `[field] has already been taken`       |
-| Resource not found            | 404    | (empty or not found message)           |
-| Malformed JSON                | 400    | (JSON parse error)                     |
-| Invalid request parameters    | 422    | (validation error messages)            |
-
----
-
-## Examples
-
-### Complete User Workflow
-
-**1. Create a new user:**
-```bash
-curl -X POST {base_url}/coar_notify_inbox/users \
-  -H "Content-Type: application/json" \
-  -d '{"user": {"name": "Alice Smith"}}'
-```
-
-Response:
-```json
-{
-  "message": "User created",
-  "auth_token": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
-  "id": 1,
-  "name": "Alice Smith",
-  "role": "user",
-  "active": true,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
-
-**2. List all users:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/users \
-  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
-```
-
-**3. Deactivate the user:**
-```bash
-curl -X PATCH {base_url}/coar_notify_inbox/users/1/deactivate \
-  -H "Authorization: Bearer a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6" \
-  -H "Content-Type: application/json" \
-  -d '{}'
-```
-
----
-
-### Complete Sender Workflow
-
-**1. Create a sender:**
-```bash
-curl -X POST {base_url}/coar_notify_inbox/senders \
-  -H "Content-Type: application/json" \
-  -d '{"sender": {"user_id": 1}}'
-```
-
-Response:
-```json
-{
-  "id": 5,
-  "user_id": 1,
-  "origin_id": null,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
-
-**2. Get sender details:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/senders/5
-```
-
-**3. Update sender with targets:**
-```bash
-curl -X PUT {base_url}/coar_notify_inbox/senders/5 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sender": {"user_id": 1},
-    "targets": [{"id": 1}, {"id": 2}]
-  }'
-```
-
-**4. Delete sender:**
-```bash
-curl -X DELETE {base_url}/coar_notify_inbox/senders/5
-```
-
----
-
-### Complete Consumer Workflow
-
-**1. Create a consumer:**
-```bash
-curl -X POST {base_url}/coar_notify_inbox/consumers \
-  -H "Content-Type: application/json" \
-  -d '{"consumer": {"user_id": 1}}'
-```
-
-Response:
-```json
-{
-  "id": 3,
-  "user_id": 1,
-  "created_at": "2025-11-26T10:30:00.000Z",
-  "updated_at": "2025-11-26T10:30:00.000Z"
-}
-```
-
-**2. Get all consumers:**
-```bash
-curl -X GET {base_url}/coar_notify_inbox/consumers
-```
-
-**3. Update consumer:**
-```bash
-curl -X PUT {base_url}/coar_notify_inbox/consumers/3 \
-  -H "Content-Type: application/json" \
-  -d '{"consumer": {"user_id": 2}}'
-```
-
-**4. Delete consumer:**
-```bash
-curl -X DELETE {base_url}/coar_notify_inbox/consumers/3
-```
-
----
-
-## Rate Limiting
-
-Currently, the API does not implement rate limiting. For production deployments, implement appropriate rate limiting middleware.
-
-## Versioning
-
-The API version is indicated in the documentation. Future versions will be available under different paths if backward compatibility needs to be maintained.
-
-## Support
-
-For issues, questions, or contributions, please refer to the main repository:
-[COAR Notify Inbox Rails Engine](https://github.com/antleaf/coar-notify-inbox-rails-engine)
-
----
-
-**Last Updated:** November 26, 2025  
-**API Version:** 1.0.0
