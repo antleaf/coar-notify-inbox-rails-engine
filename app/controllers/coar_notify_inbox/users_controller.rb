@@ -9,18 +9,16 @@ module CoarNotifyInbox
 
     # POST /users
     def create
-      # default active false unless current_user is admin and explicitly sets active
+      unless current_user&.admin?
+        return render json: { error: 'Only admin can create users' }, status: :forbidden
+      end
+
       attrs = user_params.to_h
       active_param = attrs.key?('active') ? attrs.delete('active') : nil
 
       @user = CoarNotifyInbox::User.new(attrs)
       @user.role = :user
-
-      if current_user && current_user.admin?
-        @user.active = active_param == true || active_param == 'true'
-      else
-        @user.active = false
-      end
+      @user.active = active_param == true || active_param == 'true'
 
       authorize! :create, @user
 
@@ -58,9 +56,9 @@ module CoarNotifyInbox
 
     # PUT /users/:id/auth_token
     def auth_token
-      # Allow admin or the user themselves to rotate token
-      unless current_user&.admin? || current_user == @user
-        return render json: { error: 'Forbidden' }, status: :forbidden
+      # Only admin can rotate another user's token
+      unless current_user&.admin?
+        return render json: { error: 'Only admin can regenerate auth_token' }, status: :forbidden
       end
 
       new_token = SecureRandom.hex(20)
