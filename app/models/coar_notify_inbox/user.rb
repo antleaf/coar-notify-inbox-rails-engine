@@ -6,6 +6,7 @@ module CoarNotifyInbox
     enum :role, { user: 0, admin: 1 }
 
     validates :name, presence: true
+    validates :username, presence: true
     validates :auth_token, uniqueness: true
 
     before_validation :set_default_role, on: :create

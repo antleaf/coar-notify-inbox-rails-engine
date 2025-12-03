@@ -88,7 +88,7 @@ module CoarNotifyInbox
     private
 
     def user_params
-      params.require(:user).permit(:name)
+      params.require(:user).permit(:name, :username)
     end
   end
 end
