@@ -16,8 +16,37 @@ module CoarNotifyInbox
 
     # POST /senders
     def create
-      @sender = Sender.new(sender_params)
-      @sender.user = current_user
+      # Determine user: admin may create for another user via user_id param
+      user = if current_user&.admin? && sender_params[:user_id].present?
+               CoarNotifyInbox::User.find_by(id: sender_params[:user_id])
+             else
+               current_user
+             end
+
+      return render json: { error: 'User not found or inactive' }, status: :unprocessable_entity unless user && user.active?
+
+      # Ensure origin exists and enforce uniqueness (user + origin)
+      origin_uri = sender_params.dig(:origin_attributes, :uri)
+      origin = CoarNotifyInbox::Origin.find_or_create_by(uri: origin_uri) if origin_uri.present?
+
+      if origin && (existing = Sender.find_by(user_id: user.id, origin_id: origin.id))
+        # Update targets on existing sender
+        process_targets(existing)
+        if existing.save
+          render json: existing, status: :ok, include: [:origin, :targets]
+        else
+          render json: { errors: existing.errors.full_messages }, status: :unprocessable_entity
+        end
+        return
+      end
+
+      @sender = Sender.new(sender_params.except(:user_id))
+      @sender.user = user
+
+      # Only admin may set active true
+      if sender_params.key?(:active) && sender_params[:active].to_s == 'true' && !current_user&.admin?
+        @sender.active = false
+      end
 
       process_targets(@sender)
 
@@ -59,6 +88,7 @@ module CoarNotifyInbox
       params.require(:sender).permit(
         :user_id,
         :active,
+        :origin_id,
         origin_attributes: [:uri] # only one origin allowed
       )
     end
