@@ -4,7 +4,7 @@ module CoarNotifyInbox
 
     # GET /users
     def index
-      render json: @users.select(:id, :name, :role, :active, :created_at, :updated_at), status: :ok
+      render json: @users.select(:id, :name, :username, :role, :active, :created_at, :updated_at), status: :ok
     end
 
     # POST /users
@@ -15,6 +15,11 @@ module CoarNotifyInbox
 
       attrs = user_params.to_h
       active_param = attrs.key?('active') ? attrs.delete('active') : nil
+
+      # 🔥 Username existence pre-check
+      if CoarNotifyInbox::User.exists?(username: attrs['username'])
+        return render json: { error: 'User already exists' }, status: :conflict
+      end
 
       @user = CoarNotifyInbox::User.new(attrs)
       @user.role = :user
@@ -28,6 +33,7 @@ module CoarNotifyInbox
         render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
       end
     end
+
 
     # GET /users/:id
     def show
