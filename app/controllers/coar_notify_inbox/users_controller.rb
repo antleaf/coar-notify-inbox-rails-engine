@@ -34,10 +34,8 @@ module CoarNotifyInbox
       end
       # If role_param is nil, your before_validation :set_default_role kicks in and sets :user.
 
-      # ACTIVE: cast to boolean if provided
-      unless active_param.nil?
-        @user.active = ActiveModel::Type::Boolean.new.cast(active_param)
-      end
+      
+      @user.active = ActiveModel::Type::Boolean.new.cast(active_param || false)
 
       authorize! :create, @user
 
@@ -52,12 +50,12 @@ module CoarNotifyInbox
 
     # GET /users/:id
     def show
-      render json: @user.slice(:id, :name, :role, :active, :created_at, :updated_at), status: :ok
+      render json: @user.slice(:id, :name, :username, :role, :active, :created_at, :updated_at), status: :ok
     end
 
     # PUT /users/:id
     def update
-      attrs = params.require(:user).permit(:name, :username, :type, :active).to_h
+      attrs = params.require(:user).permit(:name, :type, :active).to_h
 
       # Only admin may set active true
       if attrs.key?(:active)
@@ -69,7 +67,7 @@ module CoarNotifyInbox
       end
 
       if @user.update(attrs)
-        render json: @user.slice(:id, :name, :role, :active, :created_at, :updated_at), status: :ok
+        render json: @user.slice(:id, :name, :active, :created_at, :updated_at), status: :ok
       else
         render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
       end
@@ -90,18 +88,15 @@ module CoarNotifyInbox
       end
     end
 
-    # PATCH /users/:id/activate
+    # PUT /users/:id/activate
     def activate
+
+      unless current_user&.admin?
+        return render json: { error: 'Only admin can activate user' }, status: :forbidden
+      end
+
       @user.update(active: true)
       render json: { message: "User activated successfully" }, status: :ok
-    rescue ActiveRecord::RecordInvalid
-      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
-    end
-
-    # PATCH /users/:id/deactivate
-    def deactivate
-      @user.update(active: false)
-      render json: { message: "User deactivated successfully" }, status: :ok
     rescue ActiveRecord::RecordInvalid
       render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
     end

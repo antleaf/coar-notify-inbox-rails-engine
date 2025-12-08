@@ -1,8 +1,7 @@
 CoarNotifyInbox::Engine.routes.draw do
   resources :users, only: [:index, :create, :show, :update] do
     member do
-      patch :activate
-      patch :deactivate
+      put :activate
       put :auth_token
     end
   end
