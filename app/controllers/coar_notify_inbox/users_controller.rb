@@ -13,17 +13,31 @@ module CoarNotifyInbox
         return render json: { error: 'Only admin can create users' }, status: :forbidden
       end
 
-      attrs = user_params.to_h
-      active_param = attrs.key?('active') ? attrs.delete('active') : nil
+      attrs        = user_params.to_h
+      role_param   = attrs.delete('role')
+      active_param = attrs.delete('active')
 
-      # 🔥 Username existence pre-check
+      # Username existence pre-check
       if CoarNotifyInbox::User.exists?(username: attrs['username'])
         return render json: { error: 'User already exists' }, status: :conflict
       end
 
       @user = CoarNotifyInbox::User.new(attrs)
-      @user.role = :user
-      @user.active = active_param == true || active_param == 'true'
+
+      # ROLE: allow admin to set :user or :admin, fallback to model default (:user)
+      if role_param.present?
+        unless %w[user admin].include?(role_param)
+          return render json: { error: 'Invalid role' }, status: :unprocessable_entity
+        end
+
+        @user.role = role_param
+      end
+      # If role_param is nil, your before_validation :set_default_role kicks in and sets :user.
+
+      # ACTIVE: cast to boolean if provided
+      unless active_param.nil?
+        @user.active = ActiveModel::Type::Boolean.new.cast(active_param)
+      end
 
       authorize! :create, @user
 
@@ -33,6 +47,7 @@ module CoarNotifyInbox
         render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
       end
     end
+
 
 
     # GET /users/:id
@@ -94,7 +109,7 @@ module CoarNotifyInbox
     private
 
     def user_params
-      params.require(:user).permit(:name, :username)
+      params.require(:user).permit(:name, :username, :role, :active)
     end
   end
 end
