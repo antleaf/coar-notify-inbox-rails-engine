@@ -10,7 +10,7 @@ module CoarNotifyInbox
     # POST /users
     def create
       unless current_user&.admin?
-        return render json: { error: 'Only admin can create users' }, status: :forbidden
+        return render json: { error: 'Only active admin can create users' }, status: :forbidden
       end
 
       attrs        = user_params.to_h
@@ -40,7 +40,7 @@ module CoarNotifyInbox
       authorize! :create, @user
 
       if @user.save
-        render json: { message: "User created", auth_token: @user.auth_token }, status: :created
+        render json: { message: "User created", auth_token: @user.auth_token , id: @user.id }, status: :created
       else
         render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
       end
@@ -67,7 +67,7 @@ module CoarNotifyInbox
       end
 
       if @user.update(attrs)
-        render json: @user.slice(:id, :name, :active, :created_at, :updated_at), status: :ok
+        render json: { message: "User updated", data: @user.slice(:id, :name, :active, :created_at, :updated_at) }, status: :ok 
       else
         render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
       end
@@ -90,7 +90,6 @@ module CoarNotifyInbox
 
     # PUT /users/:id/activate
     def activate
-
       unless current_user&.admin?
         return render json: { error: 'Only admin can activate user' }, status: :forbidden
       end

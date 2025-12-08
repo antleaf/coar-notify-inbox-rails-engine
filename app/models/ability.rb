@@ -10,7 +10,7 @@ class Ability
     else
       can :manage, CoarNotifyInbox::Sender, user_id: user.id
       can :manage, CoarNotifyInbox::Consumer, user_id: user.id
-      can :deactivate, CoarNotifyInbox::User, id: user.id
+      can :activate, CoarNotifyInbox::User, id: user.id
     end
   end
 end
