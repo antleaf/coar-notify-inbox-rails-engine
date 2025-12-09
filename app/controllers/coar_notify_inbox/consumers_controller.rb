@@ -56,6 +56,24 @@ module CoarNotifyInbox
       end
 
       if consumer.save
+        begin
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "origin",
+            uris: consumer.origin_uris || [],
+            related_type: "consumer",
+            related_id: consumer.id
+          )
+
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "target",
+            uris: [consumer.target_uri].compact,
+            related_type: "consumer",
+            related_id: consumer.id
+          )
+        rescue => e
+          Rails.logger.error("[ConsumersController] failed to enqueue origin/target jobs for consumer=#{consumer.id}: #{e.class} #{e.message}")
+        end
+
         render json: consumer.as_json(only: %i[id username target_uri origin_uris active]), status: :created
       else
         render json: { error: consumer.errors.full_messages.join(", ") }, status: :unprocessable_entity
@@ -94,6 +112,24 @@ module CoarNotifyInbox
       end
 
       if @consumer.save
+        begin
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "origin",
+            uris: @consumer.origin_uris || [],
+            related_type: "consumer",
+            related_id: @consumer.id
+          )
+
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "target",
+            uris: [@consumer.target_uri].compact,
+            related_type: "consumer",
+            related_id: @consumer.id
+          )
+        rescue => e
+          Rails.logger.error("[ConsumersController] failed to enqueue origin/target jobs for consumer=#{@consumer.id}: #{e.class} #{e.message}")
+        end
+
         render json: @consumer.as_json(only: %i[id username target_uri origin_uris active])
       else
         render json: { error: @consumer.errors.full_messages.join(", ") }, status: :unprocessable_entity

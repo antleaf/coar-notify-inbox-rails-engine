@@ -59,6 +59,26 @@ module CoarNotifyInbox
       end
 
       if sender.save
+        # Enqueue background updates (non-blocking). Do this before rendering to be defensive.
+        begin
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "origin",
+            uris: [sender.origin_uri].compact,
+            related_type: "sender",
+            related_id: sender.id
+          )
+
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "target",
+            uris: sender.target_uris || [],
+            related_type: "sender",
+            related_id: sender.id
+          )
+        rescue => e
+          Rails.logger.error("[SendersController] failed to enqueue origin/target jobs for sender=#{sender.id}: #{e.class} #{e.message}")
+          # do not raise — still return success to the client
+        end
+
         render json: sender.as_json(only: %i[id username origin_uri target_uris active]), status: :created
       else
         render json: { error: sender.errors.full_messages.join(", ") }, status: :unprocessable_entity
@@ -98,6 +118,26 @@ module CoarNotifyInbox
       end
 
       if @sender.save
+
+        # Enqueue background jobs to update origin/target indexes
+        begin
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "origin",
+            uris: [@sender.origin_uri].compact,
+            related_type: "sender",
+            related_id: @sender.id
+          )
+
+          CoarNotifyInbox::UpdateOriginsTargetsJob.perform_later(
+            kind: "target",
+            uris: @sender.target_uris || [],
+            related_type: "sender",
+            related_id: @sender.id
+          )
+        rescue => e
+          Rails.logger.error("[SendersController] failed to enqueue origin/target jobs for sender=#{@sender.id}: #{e.class} #{e.message}")
+        end
+
         render json: @sender.as_json(only: %i[id username origin_uri target_uris active])
       else
         render json: { error: @sender.errors.full_messages.join(", ") }, status: :unprocessable_entity
