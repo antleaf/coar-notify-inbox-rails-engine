@@ -18,10 +18,11 @@ CoarNotifyInbox::Engine.routes.draw do
     end
   end
 
-  resources :notification_types
   resources :notifications, only: [:index, :create] do
     collection do
-      get :search
+      get ":type/:uri", action: :by_type, constraints: { type: /(sender|consumer)/ }
     end
   end
+
+  resources :notification_types
 end

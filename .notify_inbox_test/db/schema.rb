@@ -22,23 +22,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
   end
 
   create_table "coar_notify_inbox_notification_types", force: :cascade do |t|
-    t.string "notification_type"
+    t.string "name", null: false
+    t.string "label"
+    t.text "description"
+    t.json "notification_ids", default: [], null: false
+    t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_notification_types_on_name", unique: true
   end
 
   create_table "coar_notify_inbox_notifications", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "notification_type_id", null: false
-    t.integer "origin_id", null: false
-    t.integer "target_id", null: false
-    t.json "payload", default: {}
+    t.string "username", null: false
+    t.string "origin_uri", null: false
+    t.string "target_uri", null: false
+    t.json "payload", null: false
+    t.bigint "notification_type_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["notification_type_id"], name: "index_coar_notify_inbox_notifications_on_notification_type_id"
-    t.index ["origin_id"], name: "index_coar_notify_inbox_notifications_on_origin_id"
-    t.index ["target_id"], name: "index_coar_notify_inbox_notifications_on_target_id"
-    t.index ["user_id"], name: "index_coar_notify_inbox_notifications_on_user_id"
+    t.index ["origin_uri"], name: "index_coar_notify_inbox_notifications_on_origin_uri"
+    t.index ["target_uri"], name: "index_coar_notify_inbox_notifications_on_target_uri"
+    t.index ["username"], name: "index_coar_notify_inbox_notifications_on_username"
   end
 
   create_table "coar_notify_inbox_origins", force: :cascade do |t|
@@ -84,9 +89,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
   end
 
   add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "username", primary_key: "username"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_notification_types", column: "notification_type_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_origins", column: "origin_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_users", column: "user_id"
   add_foreign_key "coar_notify_inbox_senders", "coar_notify_inbox_users", column: "username", primary_key: "username"
 end
