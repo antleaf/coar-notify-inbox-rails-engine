@@ -6,44 +6,62 @@ This is designed to function as a standalone COAR Notify inbox supporting [v1.0.
 
 There is a [related Hyrax 5.2 integration GitHub repository](https://github.com/antleaf/hyrax-coar-notify). 
 
-## Usage
-To use this engine in your Rails application:
+---
 
-1. Add this line to your application's Gemfile:
-   ```ruby
-   gem 'coar-notify-inbox-rails-engine', git: 'https://github.com/antleaf/coar-notify-inbox-rails-engine.git'
-   ```
+# Using This Engine as a Gem (from GitHub)
 
-2. Run `bundle install`:
-   ```bash
-   bundle install
-   ```
+Follow these steps in your **host Rails application**:
 
-3. Mount the engine in your application's `config/routes.rb`:
-   ```ruby
-   mount CoarNotifyInbox::Engine => "/coar_notify_inbox"
-   ```
+---
 
-4. Restart your Rails server.
-
-The engine's routes and features will now be available under `/coar_notify_inbox` in your application.
-
-## Installation
-Add this line to your application's Gemfile:
+## 1. Add the engine to your Gemfile
 
 ```ruby
-gem "coar-notify-inbox-rails-engine"
+gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine", branch: "feature/notification"
 ```
-
-And then execute:
+## 2. Install Gem
 ```bash
-$ bundle
+bundle install
 ```
-
-Or install it yourself as:
+## 3. Run migrations
 ```bash
-$ gem install coar-notify-inbox-rails-engine
+rails db:create db:migrate
 ```
+ ## 4. Mount the engine
+ ```ruby
+ # config/routes.rb
+ Rails.application.routes.draw do
+  mount CoarNotifyInbox::Engine => "/coar_notify_inbox"
+end
+```
+Start the server 
+```bash
+rails server
+```
+**To verify the engine is mounted paste the URL `http://localhost:3000/coar_notify_inbox/senders` in the browser. You should see "Unauthorized" until you create users (correct behavior).**
+
+---
+# Initial Setup (Very Important)
+Open a Rails console in the host app:
+```ruby
+rails console
+```
+Create an admin: (copy and paste this inside rails console)
+```bash
+admin = CoarNotifyInbox::User.create!(username: "admin", name: "Admin", role: :admin, active: true)
+puts "Admin Token: #{admin.auth_token}"
+```
+copy the token since you will require this token to access API's using `Authorization: Bearer <TOKEN>`
+---
+
+# API Documentation
+Full API documentation (with request + response examples) is available here: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)
+
+# Postman Collection (Recommended for Testing)
+A complete Postman test suite is provided.
+Import these two files:
+ - Instructions for use: [docs/POSTMAN_COLLECTION.md](docs/POSTMAN_COLLECTION.md)
 
 ## Contributing
-Contribution directions go here.
+PRs are welcome.
+Please open issues for enhancements or questions.
