@@ -363,30 +363,3 @@ curl -X POST "{{BASE_URL}}/senders" \
 
 ## 4. Create notification (example)
 Notification ingestion uses the COAR Notify payload and requires a matching consumer (`target.inbox` must equal consumer.target_uri). See notifications docs.
-
----
-
-# Notes & implementation details
-
-- `username` is the owner key everywhere — that means `Senders`, `Consumers`, and `Notifications` are stored against a `username` string, not a numeric `user_id`.
-- For duplicate checks, the engine enforces database unique constraints (migration-level) and application-level validation. Duplicate creates return `409 Conflict`.
-- `active` behavior:
-  - Non-admin-created resources default to `active = false`.
-  - Only admin can set active true. Both admin and non-admin can set `active = false`.
-- `origin_uri` and `target_uri` exact string comparison matters — trailing slashes matter.
-- If you need to debug background jobs locally, set `config.active_job.queue_adapter = :inline` in `development.rb` temporarily to execute jobs synchronously.
-
----
-
-# Troubleshooting & Tips
-
-- If `bundle install` fails for engine installation:
-  - Ensure `coar_notify_inbox.gemspec` and `lib/coar_notify_inbox.rb` are committed in the repo.
-- If a job does not appear to have populated `origins`/`targets`, check Rails logs for `UpdateOriginsTargetsJob` errors.
-- If you need guaranteed strong concurrency on indexing, run the engine with PostgreSQL + Sidekiq in production.
-
----
-
-If you want, I can also:
-- generate a short OpenAPI (Swagger) YAML for these endpoints, or
-- produce a markdown cheat-sheet (2-page) for a demo script you can follow when presenting to the client.
