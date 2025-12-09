@@ -8,7 +8,8 @@ class Ability
     if user.admin?
       can :manage, :all
     else
-      can :manage, CoarNotifyInbox::Sender, user_id: user.id
+      can :manage, CoarNotifyInbox::Sender, username: user.username
+      
       can :manage, CoarNotifyInbox::Consumer, user_id: user.id
       can :activate, CoarNotifyInbox::User, id: user.id
     end
