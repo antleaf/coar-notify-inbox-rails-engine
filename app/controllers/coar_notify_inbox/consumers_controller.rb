@@ -1,144 +1,150 @@
+# frozen_string_literal: true
+
 module CoarNotifyInbox
   class ConsumersController < ApplicationController
-    before_action :set_consumer, only: [:show, :update, :destroy]
-    load_and_authorize_resource
+    # Use CanCan for loading and authorizing; create is custom (we resolve owner username)
+    load_and_authorize_resource class: "CoarNotifyInbox::Consumer", except: [:create]
 
     # GET /consumers
     def index
-      render json: @consumers, include: [:origins, :target]
+      consumers = current_user.admin? ? Consumer.all.order(:id) : Consumer.for_user(current_user).order(:id)
+      render json: consumers.as_json(only: %i[id username target_uri origin_uris active created_at updated_at])
     end
 
     # GET /consumers/:id
     def show
-      render json: @consumer, include: [:origins, :target]
+      render json: @consumer.as_json(only: %i[id username target_uri origin_uris active created_at updated_at])
     end
 
     # POST /consumers
     def create
-      # Allow admin to create for another user
-      user = if current_user&.admin? && consumer_params[:user_id].present?
-               CoarNotifyInbox::User.find_by(id: consumer_params[:user_id])
-             else
-               current_user
-             end
+      owner_username = if current_user.admin? && create_params[:username].present?
+                         create_params[:username].to_s
+                       else
+                         current_user.username
+                       end
 
-      return render json: { error: 'User not found or inactive' }, status: :unprocessable_entity unless user && user.active?
-
-      # Determine target uri for uniqueness check
-      target_uri = nil
-      if params[:target_attributes].present?
-        target_uri = params[:target_attributes].values.map { |t| t[:uri] }.first
-      elsif params.dig(:consumer, :target_uri).present?
-        target_uri = params.dig(:consumer, :target_uri)
-      end
-
-      if target_uri.present?
-        target = CoarNotifyInbox::Target.find_or_create_by(uri: target_uri)
-        if (existing = Consumer.find_by(user_id: user.id, target_id: target.id))
-          # update origins on existing consumer
-          process_origins(existing)
-          if existing.save
-            render json: existing, status: :ok, include: [:origins, :target]
-          else
-            render json: { errors: existing.errors.full_messages }, status: :unprocessable_entity
-          end
-          return
+      # If admin provided a username, validate existence and active
+      if current_user.admin? && create_params[:username].present?
+        owner_user = CoarNotifyInbox::User.find_by(username: owner_username)
+        unless owner_user&.active?
+          return render json: { error: "Provided username not found or not active" }, status: :unprocessable_entity
         end
       end
 
-      @consumer = Consumer.new(consumer_params.except(:user_id))
-      @consumer.user = user
-
-      # Only admin may set active true
-      if consumer_params.key?(:active) && consumer_params[:active].to_s == 'true' && !current_user&.admin?
-        @consumer.active = false
+      target_uri = create_params_target_or_payload
+      unless target_uri.present?
+        return render json: { error: "target_uri is required" }, status: :unprocessable_entity
       end
 
-      process_origins(@consumer)
-      process_target(@consumer)
+      # Duplicate check: username + target_uri
+      if Consumer.exists?(username: owner_username, target_uri: target_uri)
+        return render json: { error: "Consumer already exists; please update instead" }, status: :conflict
+      end
 
-      if @consumer.save
-        render json: @consumer, status: :created, include: [:origins, :target]
+      consumer = Consumer.new(
+        username: owner_username,
+        target_uri: target_uri,
+        origin_uris: create_params_origin_uris
+      )
+
+      # active rules
+      if current_user.admin?
+        consumer.active = ActiveRecord::Type::Boolean.new.cast(create_params.dig(:consumer, :active))
       else
-        render json: { errors: @consumer.errors.full_messages }, status: :unprocessable_entity
+        consumer.active = false
+      end
+
+      if consumer.save
+        render json: consumer.as_json(only: %i[id username target_uri origin_uris active]), status: :created
+      else
+        render json: { error: consumer.errors.full_messages.join(", ") }, status: :unprocessable_entity
       end
     end
 
     # PUT /consumers/:id
+    # Only allow updating target_uri and origin_uris (and active with restrictions)
     def update
-      # Allow admin to change owner
-      if current_user&.admin? && consumer_params[:user_id].present?
-        user = CoarNotifyInbox::User.find_by(id: consumer_params[:user_id])
-        return render json: { error: 'User not found or inactive' }, status: :unprocessable_entity unless user && user.active?
-        @consumer.user = user
+      # target_uri change
+      if update_params.key?(:target_uri) && update_params[:target_uri].present?
+        new_target = update_params[:target_uri].to_s
+
+        if Consumer.where(username: @consumer.username, target_uri: new_target).where.not(id: @consumer.id).exists?
+          return render json: { error: "Consumer with this target already exists for this username" }, status: :conflict
+        end
+
+        @consumer.target_uri = new_target
       end
 
-      @consumer.assign_attributes(consumer_params.except(:user_id))
-
-      # Only admin may set active true
-      if consumer_params.key?(:active) && consumer_params[:active].to_s == 'true' && !current_user&.admin?
-        @consumer.active = false
+      # origin_uris replace (exact)
+      if update_params.key?(:origin_uris)
+        # TODO: Clarify behavior — should origin_uris be appended or fully replaced?
+        # Current behavior: fully replace origin_uris with exact payload.
+        @consumer.origin_uris = update_params[:origin_uris] || []
       end
 
-      process_origins(@consumer)
-      process_target(@consumer)
+      # Handle active: non-admins cannot set it true
+      if update_params.key?(:active)
+        desired_active = ActiveRecord::Type::Boolean.new.cast(update_params[:active])
+        if desired_active && !current_user.admin?
+          @consumer.active = false
+        else
+          @consumer.active = desired_active
+        end
+      end
 
       if @consumer.save
-        render json: @consumer, include: [:origins, :target]
+        render json: @consumer.as_json(only: %i[id username target_uri origin_uris active])
       else
-        render json: { errors: @consumer.errors.full_messages }, status: :unprocessable_entity
+        render json: { error: @consumer.errors.full_messages.join(", ") }, status: :unprocessable_entity
       end
     end
 
-    # DELETE /consumers/:id
-    def destroy
-      @consumer.destroy
-      head :no_content
+    # PUT /consumers/:id/activate
+    # Admin-only endpoint that activates the consumer (sets active = true)
+    def activate
+      unless current_user.admin?
+        return render json: { error: "Only admin can activate consumers" }, status: :forbidden
+      end
+
+      @consumer.active = true
+      if @consumer.save
+        render json: @consumer.as_json(only: %i[id username target_uri origin_uris active])
+      else
+        render json: { error: @consumer.errors.full_messages.join(", ") }, status: :unprocessable_entity
+      end
     end
 
     private
 
-    def set_consumer
-      @consumer = Consumer.find(params[:id])
+    # Strong params helpers for create/update
+    def create_params
+      params.permit(:username, consumer: %i[target_uri active], origin_uris: [])
     end
 
-    # Strong parameters
-    def consumer_params
-      params.require(:consumer).permit(:user_id, :active)
-    end
-
-    # Handle single target (consumer has one target)
-    def process_target(consumer)
-      uri = nil
-      if params[:target_attributes].present?
-        uri = params[:target_attributes].values.map { |t| t[:uri] }.first
-      elsif params.dig(:consumer, :target_uri).present?
-        uri = params.dig(:consumer, :target_uri)
+    def update_params
+      if params[:consumer].present?
+        params.require(:consumer).permit(:target_uri, :active, origin_uris: [])
+      else
+        params.permit(:target_uri, :active, origin_uris: [])
       end
-
-      return unless uri.present?
-
-      target = CoarNotifyInbox::Target.find_or_create_by(uri: uri)
-
-      # Replace existing consumer_target
-      if consumer.respond_to?(:consumer_target) && consumer.consumer_target
-        consumer.consumer_target.destroy
-      end
-
-      consumer.consumer_target = CoarNotifyInbox::ConsumerTarget.new(target: target)
     end
 
-    # Handle multiple origins
-    def process_origins(consumer)
-      return unless params[:origin_attributes].present?
+    def create_params_target_or_payload
+      # Accept target_uri either under consumer.target_uri or top-level target_uri
+      if create_params[:consumer].present? && create_params[:consumer][:target_uri].present?
+        create_params[:consumer][:target_uri]
+      else
+        params[:target_uri] || params.dig(:consumer, :target_uri)
+      end
+    end
 
-      origin_uris = params[:origin_attributes].values.map { |o| o[:uri] }
-
-      consumer.consumer_origins.destroy_all
-
-      origin_uris.each do |uri|
-        origin = CoarNotifyInbox::Origin.find_or_create_by(uri: uri)
-        consumer.consumer_origins.create(origin: origin)
+    def create_params_origin_uris
+      # Accept origin_uris either top-level or under consumer
+      if create_params[:consumer].present? && create_params[:consumer][:origin_uris].present?
+        create_params[:consumer][:origin_uris]
+      else
+        create_params[:origin_uris] || params[:origin_uris] || params.dig(:consumer, :origin_uris) || []
       end
     end
   end

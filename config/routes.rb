@@ -12,7 +12,12 @@ CoarNotifyInbox::Engine.routes.draw do
     end
   end
 
-  resources :consumers
+  resources :consumers do
+    member do
+      put :activate    
+    end
+  end
+
   resources :notification_types
   resources :notifications, only: [:index, :create] do
     collection do

@@ -32,13 +32,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_01_000000) do
   end
 
   create_table "coar_notify_inbox_consumers", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "target_id"
-    t.boolean "active", default: false
+    t.string "username", null: false
+    t.string "target_uri", null: false
+    t.json "origin_uris", default: [], null: false
+    t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["target_id"], name: "index_coar_notify_inbox_consumers_on_target_id"
-    t.index ["user_id"], name: "index_coar_notify_inbox_consumers_on_user_id"
+    t.index ["username", "target_uri"], name: "index_coar_notify_inbox_consumers_on_username_and_target_uri", unique: true
   end
 
   create_table "coar_notify_inbox_notification_types", force: :cascade do |t|
@@ -111,8 +111,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_01_000000) do
   add_foreign_key "coar_notify_inbox_consumer_origins", "coar_notify_inbox_origins", column: "origin_id"
   add_foreign_key "coar_notify_inbox_consumer_targets", "coar_notify_inbox_consumers", column: "consumer_id"
   add_foreign_key "coar_notify_inbox_consumer_targets", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "user_id"
+  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "username", primary_key: "username"
   add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_notification_types", column: "notification_type_id"
   add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_origins", column: "origin_id"
   add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_targets", column: "target_id"
