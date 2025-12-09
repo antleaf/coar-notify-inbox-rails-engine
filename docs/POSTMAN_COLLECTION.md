@@ -6,7 +6,7 @@ It assumes only basic familiarity with Postman and terminal commands.
 ___
 
 ### 1. Download the Postman Collection
-- You can downalod this using the this [link](https://raw.githubusercontent.com/antleaf/coar-notify-inbox-rails-engine/feature/notification/docs/coar_notify_inbox_postman_collection.json)
+- You can downalod this using the this [link](/docs/coar_notify_inbox_postman_collection.json)
 
 ### 2. Import the Collection into Postman
 1. Open Postman
