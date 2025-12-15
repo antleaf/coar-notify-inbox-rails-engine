@@ -7,7 +7,7 @@ module CoarNotifyInbox
     belongs_to :notification_type,
                class_name: "CoarNotifyInbox::NotificationType"
 
-    # Rails 8 JSON handling (SQLite-compatible)
+    # Rails 8 JSON handling (SQLite compatible)
     attribute :raw_payload, :json, default: {}
 
     # ----------------------

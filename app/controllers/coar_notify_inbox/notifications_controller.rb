@@ -7,65 +7,50 @@ module CoarNotifyInbox
     # ------------------------------------------------------------
     # POST /notifications
     #
-    # Creates a new notification (append-only).
-    #
-    # IMPORTANT DESIGN NOTES:
-    # - Anyone with a valid auth_token may POST a notification.
-    # - Ownership / authorization is NOT user-id based.
-    # - We validate access via origin_uri (Sender ownership).
-    # - A future target_uri (Consumer ownership) check is present
-    #   but COMMENTED intentionally.
+    # Append-only notification inbox.
     # ------------------------------------------------------------
     def create
-      # ----------------------------------------------------------
       # 1. Read raw JSON payload exactly as sent
-      # ----------------------------------------------------------
       raw_payload = params.to_unsafe_h
 
-      # ----------------------------------------------------------
-      # 2. Extract origin_uri and target_uri from payload
-      #
-      # Expected COAR Notify shape (simplified):
-      # {
-      #   "origin": { "inbox": "..." },
-      #   "target": { "inbox": "..." }
-      # }
-      # ----------------------------------------------------------
+      # 2. Validate payload using coarnotifyrb (schema + structure)
+      begin
+        server = CoarNotify::Server.new
+        server.receive(raw_payload)
+      rescue StandardError => e
+        return render json: {
+          error: "Invalid COAR Notify payload",
+          details: e.message
+        }, status: :unprocessable_entity
+      end
+
+      # 3. Extract origin and target inbox URIs
       origin_uri = raw_payload.dig("origin", "inbox")
       target_uri = raw_payload.dig("target", "inbox")
 
       if origin_uri.blank? || target_uri.blank?
-        return render json: { error: "Invalid notification payload: missing origin.inbox or target.inbox" },
-                      status: :unprocessable_entity
+        return render json: {
+          error: "Invalid notification payload: missing origin.inbox or target.inbox"
+        }, status: :unprocessable_entity
       end
 
-      # ----------------------------------------------------------
-      # 3. Determine username context
-      #
-      # Notifications are always associated with the authenticated user.
-      # (Not sender/consumer IDs.)
-      # ----------------------------------------------------------
+      # 4. Username context
       username = current_user.username
 
-      # ----------------------------------------------------------
-      # 4. HARD CHECK (ENABLED)
-      #    Ensure this user owns the origin URI via Sender
-      # ----------------------------------------------------------
+      # 5. HARD CHECK — sender ownership (ENABLED)
       sender_exists = CoarNotifyInbox::Sender.exists?(
         username: username,
         origin_uri: origin_uri
       )
 
       unless sender_exists
-        return render json: { error: "Access denied: origin URI not registered for this user" },
-                      status: :forbidden
+        return render json: {
+          error: "Access denied: origin URI not registered for this user"
+        }, status: :forbidden
       end
 
       # ----------------------------------------------------------
-      # 5. SOFT CHECK (COMMENTED — FUTURE USE)
-      #
-      # Uncomment this block if/when you want notifications
-      # to be authorized by consumer ownership instead.
+      # SOFT CHECK — consumer ownership (COMMENTED)
       #
       # consumer_exists = CoarNotifyInbox::Consumer.exists?(
       #   username: username,
@@ -73,27 +58,21 @@ module CoarNotifyInbox
       # )
       #
       # unless consumer_exists
-      #   return render json: { error: "Access denied: target URI not registered for this user" },
-      #                 status: :forbidden
+      #   return render json: {
+      #     error: "Access denied: target URI not registered for this user"
+      #   }, status: :forbidden
       # end
       # ----------------------------------------------------------
 
-      # ----------------------------------------------------------
       # 6. Determine notification type
-      #
-      # NOTE:
-      # - We currently infer type from payload["type"] if present.
-      # - If absent, we fall back to "unknown".
-      # - This keeps the system flexible and non-breaking.
-      # ----------------------------------------------------------
       notification_type_name = raw_payload["type"].presence || "unknown"
 
       notification_type =
-        CoarNotifyInbox::NotificationType.find_or_create_by!(name: notification_type_name)
+        CoarNotifyInbox::NotificationType.find_or_create_by!(
+          name: notification_type_name
+        )
 
-      # ----------------------------------------------------------
       # 7. Create notification (append-only)
-      # ----------------------------------------------------------
       notification = CoarNotifyInbox::Notification.new(
         username: username,
         origin_uri: origin_uri,
@@ -103,11 +82,7 @@ module CoarNotifyInbox
       )
 
       if notification.save
-        # --------------------------------------------------------
-        # 8. Synchronously update notification_type index
-        #
-        # This uses optimistic locking and retries internally.
-        # --------------------------------------------------------
+        # 8. Synchronously update notification type index
         notification_type.append_notification_id!(notification.id)
 
         render json: {
@@ -119,16 +94,14 @@ module CoarNotifyInbox
           created_at: notification.created_at
         }, status: :created
       else
-        render json: { errors: notification.errors.full_messages },
-               status: :unprocessable_entity
+        render json: {
+          errors: notification.errors.full_messages
+        }, status: :unprocessable_entity
       end
     end
 
     # ------------------------------------------------------------
     # GET /notifications
-    #
-    # Admin: list all notifications
-    # User: list notifications for their username
     # ------------------------------------------------------------
     def index
       notifications =
@@ -143,12 +116,6 @@ module CoarNotifyInbox
 
     # ------------------------------------------------------------
     # GET /notifications/:type/:uri
-    #
-    # type = "sender"   → filter by origin_uri
-    # type = "consumer" → filter by target_uri
-    #
-    # Admin: sees all
-    # User: sees only own notifications
     # ------------------------------------------------------------
     def by_endpoint
       type = params[:type]
@@ -161,8 +128,9 @@ module CoarNotifyInbox
         when "consumer"
           CoarNotifyInbox::Notification.by_target(uri)
         else
-          return render json: { error: "Invalid type. Must be 'sender' or 'consumer'." },
-                        status: :unprocessable_entity
+          return render json: {
+            error: "Invalid type. Must be 'sender' or 'consumer'."
+          }, status: :unprocessable_entity
         end
 
       notifications =
