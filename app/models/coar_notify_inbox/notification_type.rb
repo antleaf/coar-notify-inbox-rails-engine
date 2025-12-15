@@ -4,44 +4,38 @@ module CoarNotifyInbox
   class NotificationType < ApplicationRecord
     self.table_name = "coar_notify_inbox_notification_types"
 
+    # SQLite stores JSON as TEXT
     attribute :notification_ids, :json, default: []
 
     validates :name, presence: true, uniqueness: true
 
-    has_many :notifications,
-             class_name: "CoarNotifyInbox::Notification",
-             foreign_key: :notification_type_id,
-             dependent: :nullify
+    after_initialize :set_defaults
 
-    # Normalize raw payload type => canonical name
-    def self.normalize_name(raw)
-      return nil if raw.blank?
+    # --------------------------------------------------
+    # Concurrency-safe append of notification IDs
+    # Uses optimistic locking (lock_version)
+    # --------------------------------------------------
+    def append_notification_id!(notification_id, max_retries: 5)
+      retries ||= 0
 
-      # If array, pick first
-      candidate = raw.is_a?(Array) ? raw.first : raw
-      candidate = candidate.to_s
-      # strip namespace if present (e.g., "coar-notify:ReviewAction")
-      candidate = candidate.split(':').last if candidate.include?(':')
-      candidate.strip
+      ids = (notification_ids || []).dup
+      return if ids.include?(notification_id)
+
+      ids << notification_id
+      self.notification_ids = ids
+
+      save!
+    rescue ActiveRecord::StaleObjectError
+      retries += 1
+      raise if retries >= max_retries
+      reload
+      retry
     end
 
-    # Append a notification ID atomically (optimistic locking + retries)
-    def append_notification_id!(notif_id, max_retries: 5)
-      raise ArgumentError, "notif_id required" if notif_id.blank?
+    private
 
-      attempts = 0
-      begin
-        attempts += 1
-        # reload to get fresh lock_version
-        reload
-        current = Array(notification_ids || [])
-        new_ids = (current | [notif_id]) # union to avoid duplicates
-        update!(notification_ids: new_ids)
-      rescue ActiveRecord::StaleObjectError => e
-        raise if attempts >= max_retries
-        sleep(0.01 * attempts)
-        retry
-      end
+    def set_defaults
+      self.notification_ids ||= []
     end
   end
 end

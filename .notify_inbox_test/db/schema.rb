@@ -23,21 +23,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
 
   create_table "coar_notify_inbox_notification_types", force: :cascade do |t|
     t.string "name", null: false
-    t.string "label"
     t.text "description"
-    t.json "notification_ids", default: [], null: false
+    t.text "notification_ids"
     t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_notification_types_on_name", unique: true
+    t.index ["name"], name: "index_coar_notify_inbox_notification_types_on_name", unique: true
   end
 
   create_table "coar_notify_inbox_notifications", force: :cascade do |t|
     t.string "username", null: false
-    t.string "origin_uri", null: false
-    t.string "target_uri", null: false
-    t.json "payload", null: false
-    t.bigint "notification_type_id"
+    t.text "origin_uri", null: false
+    t.text "target_uri", null: false
+    t.text "raw_payload", null: false
+    t.integer "notification_type_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["notification_type_id"], name: "index_coar_notify_inbox_notifications_on_notification_type_id"
@@ -89,5 +88,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
   end
 
   add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "username", primary_key: "username"
+  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_notification_types", column: "notification_type_id"
   add_foreign_key "coar_notify_inbox_senders", "coar_notify_inbox_users", column: "username", primary_key: "username"
 end

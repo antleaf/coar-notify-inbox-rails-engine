@@ -3,20 +3,19 @@
 class CreateCoarNotifyInboxNotificationTypes < ActiveRecord::Migration[8.0]
   def change
     create_table :coar_notify_inbox_notification_types do |t|
-      # canonical name of the type (e.g. "ReviewAction")
-      t.string :name, null: false
-      t.string :label
-      t.text   :description
+      t.string  :name, null: false
+      t.text    :description
 
-      # keep list of notification ids for this type (json array)
-      t.json :notification_ids, null: false, default: []
+      # JSON array of notification IDs
+      # SQLite stores JSON as TEXT
+      t.text    :notification_ids
 
-      # optimistic locking to safely append notification ids concurrently
-      t.integer :lock_version, null: false, default: 0
+      # For optimistic locking during concurrent updates
+      t.integer :lock_version, default: 0, null: false
 
       t.timestamps
     end
 
-    add_index :coar_notify_inbox_notification_types, :name, unique: true, name: "index_notification_types_on_name"
+    add_index :coar_notify_inbox_notification_types, :name, unique: true
   end
 end
