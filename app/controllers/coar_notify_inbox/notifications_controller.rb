@@ -120,14 +120,29 @@ module CoarNotifyInbox
     # ------------------------------------------------------------
     def by_endpoint
       type = params[:type]
-      uri  = params[:uri]
+
+      raw_uri = params[:uri].to_s
+
+      # Step 1: Decode if encoded
+      decoded_uri = CGI.unescape(raw_uri)
+
+      # Step 2: Normalize malformed scheme (Rails path parsing issue)
+      normalized_uri =
+        decoded_uri.sub(/\Ahttps:\//, "https://")
+                  .sub(/\Ahttp:\//, "http://")
+                  .strip
+
+      Rails.logger.info("[Notifications#by_endpoint] type=#{type}")
+      Rails.logger.info("[Notifications#by_endpoint] raw_uri='#{raw_uri}'")
+      Rails.logger.info("[Notifications#by_endpoint] decoded_uri='#{decoded_uri}'")
+      Rails.logger.info("[Notifications#by_endpoint] normalized_uri='#{normalized_uri}'")
 
       notifications =
         case type
         when "sender"
-          CoarNotifyInbox::Notification.by_origin(uri)
+          CoarNotifyInbox::Notification.by_origin(normalized_uri)
         when "consumer"
-          CoarNotifyInbox::Notification.by_target(uri)
+          CoarNotifyInbox::Notification.by_target(normalized_uri)
         else
           return render json: {
             error: "Invalid type. Must be 'sender' or 'consumer'."
@@ -137,7 +152,12 @@ module CoarNotifyInbox
       notifications =
         notifications.where(username: current_user.username) unless current_user.admin?
 
+      Rails.logger.info(
+        "[Notifications#by_endpoint] result_count=#{notifications.count}"
+      )
+
       render json: notifications.order(created_at: :desc), status: :ok
     end
+
   end
 end
