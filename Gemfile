@@ -7,7 +7,7 @@ gem "puma"
 
 gem "sqlite3"
 
-gem "coarnotifyrb", git: "https://github.com/coar-notify/coarnotifyrb.git", branch: "main"
+gem "coarnotify", git: "https://github.com/coar-notify/coarnotifyrb", branch: "main"
 
 # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
 gem "rubocop-rails-omakase", require: false
