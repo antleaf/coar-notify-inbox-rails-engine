@@ -10,69 +10,70 @@ module CoarNotifyInbox
     # Append-only notification inbox.
     # ------------------------------------------------------------
     def create
-      # 1. Read raw JSON payload exactly as sent
-      raw_payload = params.to_unsafe_h
-
-      # 2. Validate payload using coarnotifyrb (schema + structure)
+      # ----------------------------------------------------------
+      # 1. Parse RAW JSON body (do NOT use params)
+      # ----------------------------------------------------------
       begin
-        server = CoarNotify::Server.new
-        server.receive(raw_payload)
-      rescue StandardError => e
+        raw_payload = JSON.parse(request.raw_post)
+      rescue JSON::ParserError
+        return render json: {
+          error: "Invalid JSON payload"
+        }, status: :unprocessable_entity
+      end
+
+      # ----------------------------------------------------------
+      # 2. Basic required-field validation
+      # ----------------------------------------------------------
+      unless raw_payload["type"].present? &&
+             raw_payload.dig("origin", "inbox").present? &&
+             raw_payload.dig("target", "inbox").present?
+        return render json: {
+          error: "Invalid COAR Notify payload",
+          details: "Missing required fields: type, origin.inbox, target.inbox"
+        }, status: :unprocessable_entity
+      end
+
+      # ----------------------------------------------------------
+      # 3. Normalize URIs
+      # ----------------------------------------------------------
+      origin_uri = raw_payload.dig("origin", "inbox").to_s.strip
+      target_uri = raw_payload.dig("target", "inbox").to_s.strip
+
+      # ----------------------------------------------------------
+      # 4. Validate URIs using coarnotify helpers (CORRECT USAGE)
+      # ----------------------------------------------------------
+      begin
+        Coarnotify::Validate.absolute_uri(nil, origin_uri)
+        Coarnotify::Validate.absolute_uri(nil, target_uri)
+      rescue ArgumentError => e
         return render json: {
           error: "Invalid COAR Notify payload",
           details: e.message
         }, status: :unprocessable_entity
       end
 
-      # 3. Extract origin and target inbox URIs
-      origin_uri = raw_payload.dig("origin", "inbox")
-      target_uri = raw_payload.dig("target", "inbox")
-
-      if origin_uri.blank? || target_uri.blank?
-        return render json: {
-          error: "Invalid notification payload: missing origin.inbox or target.inbox"
-        }, status: :unprocessable_entity
-      end
-
-      # 4. Username context
+      # ----------------------------------------------------------
+      # 5. Enforce sender ownership (hard check)
+      # ----------------------------------------------------------
       username = current_user.username
 
-      # 5. HARD CHECK — sender ownership (ENABLED)
-      sender_exists = CoarNotifyInbox::Sender.exists?(
-        username: username,
-        origin_uri: origin_uri
-      )
-
-      unless sender_exists
+      unless CoarNotifyInbox::Sender.exists?(username: username, origin_uri: origin_uri)
         return render json: {
           error: "Access denied: origin URI not registered for this user"
         }, status: :forbidden
       end
 
       # ----------------------------------------------------------
-      # SOFT CHECK — consumer ownership (COMMENTED)
-      #
-      # consumer_exists = CoarNotifyInbox::Consumer.exists?(
-      #   username: username,
-      #   target_uri: target_uri
-      # )
-      #
-      # unless consumer_exists
-      #   return render json: {
-      #     error: "Access denied: target URI not registered for this user"
-      #   }, status: :forbidden
-      # end
+      # 6. Notification type (auto-managed)
       # ----------------------------------------------------------
-
-      # 6. Determine notification type
-      notification_type_name = raw_payload["type"].presence || "unknown"
-
       notification_type =
         CoarNotifyInbox::NotificationType.find_or_create_by!(
-          name: notification_type_name
+          name: raw_payload["type"]
         )
 
+      # ----------------------------------------------------------
       # 7. Create notification (append-only)
+      # ----------------------------------------------------------
       notification = CoarNotifyInbox::Notification.new(
         username: username,
         origin_uri: origin_uri,
@@ -82,7 +83,7 @@ module CoarNotifyInbox
       )
 
       if notification.save
-        # 8. Synchronously update notification type index
+        # Keep reverse index updated
         notification_type.append_notification_id!(notification.id)
 
         render json: {
