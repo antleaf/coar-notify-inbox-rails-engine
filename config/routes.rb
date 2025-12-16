@@ -20,7 +20,7 @@ CoarNotifyInbox::Engine.routes.draw do
 
   resources :notifications, only: [:index, :create] do
     collection do
-      get ":type/:uri", action: :by_endpoint
+      get ":type/*uri", action: :by_endpoint
     end
   end
 end
