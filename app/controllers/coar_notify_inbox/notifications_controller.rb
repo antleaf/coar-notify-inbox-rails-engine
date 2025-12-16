@@ -132,11 +132,6 @@ module CoarNotifyInbox
                   .sub(/\Ahttp:\//, "http://")
                   .strip
 
-      Rails.logger.info("[Notifications#by_endpoint] type=#{type}")
-      Rails.logger.info("[Notifications#by_endpoint] raw_uri='#{raw_uri}'")
-      Rails.logger.info("[Notifications#by_endpoint] decoded_uri='#{decoded_uri}'")
-      Rails.logger.info("[Notifications#by_endpoint] normalized_uri='#{normalized_uri}'")
-
       notifications =
         case type
         when "sender"
@@ -152,9 +147,6 @@ module CoarNotifyInbox
       notifications =
         notifications.where(username: current_user.username) unless current_user.admin?
 
-      Rails.logger.info(
-        "[Notifications#by_endpoint] result_count=#{notifications.count}"
-      )
 
       render json: notifications.order(created_at: :desc), status: :ok
     end
