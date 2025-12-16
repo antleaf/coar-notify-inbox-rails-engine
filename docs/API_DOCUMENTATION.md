@@ -310,6 +310,67 @@ Admin-only — set active = true.
 
 ---
 
+# Notifications API
+
+### Summary
+Incoming notifications are:
+- Validated against the COAR Notify specification.
+- Stored as immutable records.
+- Queryable by user, sender, or consumer.
+
+### Endpoints
+
+#### GET /notifications
+List notifications.
+
+- Admin: list all.
+- Non-admin: list only those where `username == current_user.username`.
+
+### Filter Notifications
+#### GET /notifications/:type/:uri
+
+Example Sender (origin inbox): `/notifications/sender/https://origin.example/inbox/`
+Example Consumer (target inbox) : `/notifications/consumer/https://origin.example/inbox/`
+
+#### POST /notifications
+Create a notification.
+
+- Body example:
+```json
+{
+  "type": "Offer",
+  "origin": {
+    "inbox": "https://origin.example/inbox/"
+  },
+  "target": {
+    "inbox": "https://consumer.example/inbox/"
+  },
+  "object": {
+    "id": "https://repo.example/object/123",
+    "type": "Dataset"
+  }
+}
+
+```
+
+**Validation**
+- Must be valid COAR Notify JSON.
+- Origin inbox must belong to a registered Sender.
+- Validation is performed internally using coarnotify.
+
+**Success (201)**
+```json
+{
+  "id": 1,
+  "username": "testuser",
+  "origin_uri": "https://origin.example/inbox/",
+  "target_uri": "https://consumer.example/inbox/",
+  "notification_type": "Offer",
+  "created_at": "2025-12-15T10:30:00Z"
+}
+```
+---
+
 # Origins & Targets (background indexing)
 
 - When Senders or Consumers are created/updated, the engine enqueues `CoarNotifyInbox::UpdateOriginsTargetsJob` (ActiveJob) to maintain two tables:
@@ -362,4 +423,21 @@ curl -X POST "{{BASE_URL}}/senders" \
 ```
 
 ## 4. Create notification (example)
-Notification ingestion uses the COAR Notify payload and requires a matching consumer (`target.inbox` must equal consumer.target_uri). See notifications docs.
+```bash
+curl --location '{{BASE_URL}}/notifications' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <TESTUSER_TOKEN>' \
+--data '{
+    "type": "Offer",
+    "origin": {
+      "inbox": "https://evolbiol.peercommunityin.org/coar_notify/"
+    },
+    "target": {
+      "inbox": "https://research-organisation.org/inbox/"
+    },
+    "object": {
+      "id": "https://repo.example/object/123",
+      "type": "Dataset"
+    }
+}'
+```
