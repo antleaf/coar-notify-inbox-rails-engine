@@ -24,12 +24,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Redis service intentionally kept commented.
+    # Can be enabled later if system/integration tests require it.
     # services:
     #  redis:
     #    image: redis
     #    ports:
     #      - 6379:6379
     #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
       - name: Install packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config
@@ -46,8 +49,13 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
+          # REDIS_URL can be enabled if Redis-backed tests are added
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test
+        run: |
+          # Rails 8 removed `db:test:prepare`
+          # Engine tests using RSpec should run RSpec directly
+          # Dummy app now boots correctly and Rails handles DB setup automatically
+          bundle exec rspec
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
