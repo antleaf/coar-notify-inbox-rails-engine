@@ -188,7 +188,7 @@ Create a sender.
     "https://target2.example/inbox/"
   ]
 }
-```s
+```
 
 **Rules**
 - If `current_user` is admin and `username` is provided, the engine checks that provided username exists and is active; otherwise returns `422`.
