@@ -182,13 +182,13 @@ Create a sender.
     "origin_uri": "https://origin.example/coar_notify/",
     "active": false
   },
-  "user_name": "testuser",       // when current_user is admin and wants to create for another user
+  "username": "testuser",       // when current_user is admin and wants to create for another user
   "target_uris": [
     "https://target.example/inbox/",
     "https://target2.example/inbox/"
   ]
 }
-```
+```s
 
 **Rules**
 - If `current_user` is admin and `username` is provided, the engine checks that provided username exists and is active; otherwise returns `422`.
