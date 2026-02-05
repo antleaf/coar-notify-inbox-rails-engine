@@ -184,8 +184,8 @@ Create a sender.
   },
   "username": "testuser",       // when current_user is admin and wants to create for another user
   "target_uris": [
-    "https://target.example/inbox/",
-    "https://target2.example/inbox/"
+    "https://review-service.com/system",
+    "https://target2.example/coar_notify/"
   ]
 }
 ```
@@ -266,7 +266,7 @@ List consumers.
 **Success (200)**
 ```json
 [
-  { "id": 5, "username": "testuser", "target_uri": "https://consumer.example/inbox/", "origin_uris": ["https://origin.example/inbox/"], "active": false }
+  { "id": 5, "username": "testuser", "target_uri": "https://consumer.example/coar_notify/", "origin_uris": ["https://origin.example/coar_notify/"], "active": false }
 ]
 ```
 
@@ -277,10 +277,10 @@ Create a consumer.
 ```json
 {
   "consumer": {
-    "target_uri": "https://consumer.example/inbox/",
+    "target_uri": "https://consumer.example/coar_notify/",
     "active": false
   },
-  "origin_uris": ["https://origin.example/inbox/"]
+  "origin_uris": ["https://origin.example/coar_notify/"]
 }
 ```
 
@@ -291,7 +291,7 @@ Create a consumer.
 
 **Success (201)**
 ```json
-{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/inbox/", "origin_uris":["https://origin.example/inbox/"], "active": false }
+{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/coar_notify/", "origin_uris":["https://origin.example/coar_notify/"], "active": false }
 ```
 
 #### PUT /consumers/:id
@@ -302,7 +302,7 @@ Update consumer (allowed fields: `target_uri`, `origin_uris`, `active` with admi
 
 **Success (200)**
 ```json
-{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/inbox/", "origin_uris":["https://origin.example/inbox/","https://origin2.example/inbox/"], "active": false }
+{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/coar_notify/", "origin_uris":["https://origin.example/coar_notify/","https://origin2.example/coar_notify/"], "active": false }
 ```
 
 #### PUT /consumers/:id/activate
@@ -329,8 +329,8 @@ List notifications.
 ### Filter Notifications
 #### GET /notifications/:type/:uri
 
-Example Sender (origin inbox): `/notifications/sender/https://origin.example/inbox/`
-Example Consumer (target inbox) : `/notifications/consumer/https://origin.example/inbox/`
+Example Sender (origin ID): `/notifications/sender/https://origin.example/coar_notify/`
+Example Consumer (target ID) : `/notifications/consumer/https://origin.example/coar_notify/`
 
 #### POST /notifications
 Create a notification.
@@ -338,24 +338,54 @@ Create a notification.
 - Body example:
 ```json
 {
-  "type": "Offer",
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://coar-notify.net"
+  ],
+  "actor": {
+    "id": "https://orcid.org/0000-0002-1825-0097",
+    "name": "Josiah Carberry",
+    "type": "Person"
+  },
+  "id": "urn:uuid:0370c0fb-bb78-4a9b-87f5-bed307a509dd",
+  "object": {
+    "id": "https://research-organisation.org/repository/preprint/201203/421/",
+    "ietf:cite-as": "https://doi.org/10.5555/12345680",
+    "ietf:item": {
+      "id": "https://research-organisation.org/repository/preprint/201203/421/content.pdf",
+      "mediaType": "application/pdf",
+      "type": [
+        "Article",
+        "sorg:ScholarlyArticle"
+      ]
+    },
+    "type": [
+      "Page",
+      "sorg:AboutPage"
+    ]
+  },
   "origin": {
-    "inbox": "https://origin.example/inbox/"
+    "id": "https://research-organisation.org/repository",
+    "inbox": "https://research-organisation.org/inbox/",
+    "type": "Service"
   },
   "target": {
-    "inbox": "https://consumer.example/inbox/"
+    "id": "https://review-service.com/system",
+    "inbox": "https://review-service.com/inbox/",
+    "type": "Service"
   },
-  "object": {
-    "id": "https://repo.example/object/123",
-    "type": "Dataset"
-  }
+  "type": [
+    "Offer",
+    "coar-notify:ReviewAction"
+  ]
 }
+
 
 ```
 
 **Validation**
 - Must be valid COAR Notify JSON.
-- Origin inbox must belong to a registered Sender.
+- Origin ID must belong to a registered Sender.
 - Validation is performed internally using coarnotify.
 
 **Success (201)**
@@ -363,8 +393,8 @@ Create a notification.
 {
   "id": 1,
   "username": "testuser",
-  "origin_uri": "https://origin.example/inbox/",
-  "target_uri": "https://consumer.example/inbox/",
+  "origin_uri": "https://origin.example/coar_notify/",
+  "target_uri": "https://consumer.example/coar_notifys/",
   "notification_type": "Offer",
   "created_at": "2025-12-15T10:30:00Z"
 }
@@ -406,8 +436,8 @@ curl -X POST "{{BASE_URL}}/consumers" \
   -H "Authorization: Bearer <TESTUSER_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "consumer": { "target_uri": "https://consumer.local/inbox/", "active": false },
-    "origin_uris": ["https://origin.local/inbox/"]
+    "consumer": { "target_uri": "https://consumer.local/coar_notify/", "active": false },
+    "origin_uris": ["https://origin.local/coar_notify/"]
   }'
 ```
 
@@ -418,7 +448,7 @@ curl -X POST "{{BASE_URL}}/senders" \
   -H "Content-Type: application/json" \
   -d '{
     "sender": { "origin_uri": "https://origin.local/coar_notify/", "active": false },
-    "target_uris": ["https://consumer.local/inbox/"]
+    "target_uris": ["https://consumer.local/coar_notify/"]
   }'
 ```
 
@@ -428,16 +458,45 @@ curl --location '{{BASE_URL}}/notifications' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer <TESTUSER_TOKEN>' \
 --data '{
-    "type": "Offer",
-    "origin": {
-      "inbox": "https://evolbiol.peercommunityin.org/coar_notify/"
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://coar-notify.net"
+  ],
+  "actor": {
+    "id": "https://orcid.org/0000-0002-1825-0097",
+    "name": "Josiah Carberry",
+    "type": "Person"
+  },
+  "id": "urn:uuid:0370c0fb-bb78-4a9b-87f5-bed307a509dd",
+  "object": {
+    "id": "https://research-organisation.org/repository/preprint/201203/421/",
+    "ietf:cite-as": "https://doi.org/10.5555/12345680",
+    "ietf:item": {
+      "id": "https://research-organisation.org/repository/preprint/201203/421/content.pdf",
+      "mediaType": "application/pdf",
+      "type": [
+        "Article",
+        "sorg:ScholarlyArticle"
+      ]
     },
-    "target": {
-      "inbox": "https://research-organisation.org/inbox/"
-    },
-    "object": {
-      "id": "https://repo.example/object/123",
-      "type": "Dataset"
-    }
+    "type": [
+      "Page",
+      "sorg:AboutPage"
+    ]
+  },
+  "origin": {
+    "id": "https://research-organisation.org/repository",
+    "inbox": "https://research-organisation.org/inbox/",
+    "type": "Service"
+  },
+  "target": {
+    "id": "https://review-service.com/system",
+    "inbox": "https://review-service.com/inbox/",
+    "type": "Service"
+  },
+  "type": [
+    "Offer",
+    "coar-notify:ReviewAction"
+  ]
 }'
 ```
