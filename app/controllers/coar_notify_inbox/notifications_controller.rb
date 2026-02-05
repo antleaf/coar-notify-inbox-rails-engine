@@ -25,19 +25,19 @@ module CoarNotifyInbox
       # 2. Basic required-field validation
       # ----------------------------------------------------------
       unless raw_payload["type"].present? &&
-             raw_payload.dig("origin", "inbox").present? &&
-             raw_payload.dig("target", "inbox").present?
+             raw_payload.dig("origin", "id").present? &&
+             raw_payload.dig("target", "id").present?
         return render json: {
           error: "Invalid COAR Notify payload",
-          details: "Missing required fields: type, origin.inbox, target.inbox"
+          details: "Missing required fields: type, origin.id, target.id"
         }, status: :unprocessable_entity
       end
 
       # ----------------------------------------------------------
       # 3. Normalize URIs
       # ----------------------------------------------------------
-      origin_uri = raw_payload.dig("origin", "inbox").to_s.strip
-      target_uri = raw_payload.dig("target", "inbox").to_s.strip
+      origin_uri = raw_payload.dig("origin", "id").to_s.strip
+      target_uri = raw_payload.dig("target", "id").to_s.strip
 
       # ----------------------------------------------------------
       # 4. Validate URIs using coarnotify helpers (CORRECT USAGE)
