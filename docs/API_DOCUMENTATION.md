@@ -198,7 +198,7 @@ Create a sender.
 
 **Success (201)**
 ```json
-{ "id": 10, "username": "testuser", "origin_uri": "https://origin.example/coar_notify/", "target_uris": ["https://target.example/inbox/"], "active": false }
+{ "id": 10, "username": "testuser", "origin_uri": "https://origin.example/coar_notify/", "target_uris": ["https://target.example/coar_notify/"], "active": false }
 ```
 
 **Errors**
