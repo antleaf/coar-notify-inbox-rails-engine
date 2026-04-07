@@ -1,0 +1,1699 @@
+{
+	"info": {
+		"_postman_id": "fc898a23-1a5d-4be2-81f7-6197363a2067",
+		"name": "COAR Notify Inbox API",
+		"description": "Complete test suite for COAR Notify Inbox Rails Engine API covering all endpoints with major test cases including happy path, error handling, and edge cases.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "50396888",
+		"_collection_link": "https://kushagra-dd9ecedc-8742105.postman.co/workspace/Kushagra-Varade's-Workspace~140e076a-d7f5-4e10-8033-fbc529c82b6c/collection/50396888-fc898a23-1a5d-4be2-81f7-6197363a2067?action=share&source=collection_link&creator=50396888"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Active Admin Creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Active admin auth token is stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('active_admin_token', jsonData.auth_token);",
+									"});",
+									"",
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User created');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.expect(payload).to.have.property(\"role\");",
+									"    pm.expect(payload).to.have.property(\"active\");",
+									"",
+									"    pm.expect(payload.role).to.equal(\"admin\");",
+									"    pm.expect(payload.active).to.equal(true);",
+									"    pm.collectionVariables.set('adminUsername', payload.username);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Kushagra Varad\",\n    \"username\" : \"varadekd_{{$timestamp}}\",\n    \"active\" : true,\n    \"role\" : \"admin\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Inactive Admin Creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inactive admin auth token is stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('inactive_admin_token', jsonData.auth_token);",
+									"});",
+									"",
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User created');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.expect(payload).to.have.property(\"role\");",
+									"    pm.expect(payload).to.have.property(\"active\");",
+									"",
+									"    pm.expect(payload.role).to.equal(\"admin\");",
+									"    pm.expect(payload.active).to.equal(false);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Inactive admin\",\n    \"username\" : \"inactiveAdmin_{{$timestamp}}\",\n    \"active\" : false,\n    \"role\" : \"admin\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Active User Creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Active user auth token is stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('active_user_token', jsonData.auth_token);",
+									"    pm.collectionVariables.set('user_ID', jsonData.id);",
+									"});",
+									"",
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User created');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.expect(payload).to.have.property(\"role\");",
+									"    pm.expect(payload).to.have.property(\"active\");",
+									"",
+									"    pm.expect(payload.role).to.equal(\"user\");",
+									"    pm.expect(payload.active).to.equal(true);",
+									"    pm.collectionVariables.set('normalUsername', payload.username);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Test user\",\n    \"username\" : \"testUser_{{$timestamp}}\",\n    \"active\" : true,\n    \"role\" : \"user\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid role user creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 500 Created', function () {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.expect(payload).to.have.property(\"role\");",
+									"",
+									"    pm.expect(payload.role).to.equal(\"superadmin\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Test user\",\n    \"username\" : \"testUser_{{$timestamp}}\",\n    \"role\" : \"superadmin\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Duplicate user creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"pm.test('Status code is 409 Created', function () {",
+									"    pm.response.to.have.status(409);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('User already exists');",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Test user\",\n    \"username\" : \"admin\",\n    \"active\" : true,\n    \"role\" : \"user\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Inactive User Creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inactive user auth token is stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('active_user_token', jsonData.auth_token);",
+									"    pm.collectionVariables.set('Inactive_user_ID', jsonData.id);",
+									"});",
+									"",
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User created');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.expect(payload).to.have.property(\"role\");",
+									"    pm.expect(payload).to.have.property(\"active\");",
+									"",
+									"    pm.expect(payload.role).to.equal(\"user\");",
+									"    pm.expect(payload.active).to.equal(false);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Test user inactive\",\n    \"username\" : \"inactiveTestUser_{{$timestamp}}\",\n    \"active\" : false,\n    \"role\" : \"user\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Default values payload",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Default User ID stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('default_userID', jsonData.id);",
+									"});",
+									"",
+									"pm.test('Status code is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User created');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"    ",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"username\");",
+									"    pm.collectionVariables.set('defaultUsername', payload.username);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Default value Inital\",\n    \"username\" : \"defaultUser_{{$timestamp}}\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "User creation - Using Inactive admin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"pm.test('Status code is 401 Created', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Unauthorized');",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{inactive_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Default value Inital\",\n    \"username\" : \"defaultUser_{{$timestamp}}\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Update default user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Default User ID stored', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('default_userID', jsonData.id);",
+									"});",
+									"",
+									"pm.test('Status code is 200 Created', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response contains message', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User updated');",
+									"});",
+									"",
+									"pm.test(\"User payload verification\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    const payload = body.user;",
+									"",
+									"    pm.expect(payload).to.have.property(\"name\");",
+									"    pm.expect(payload).to.have.property(\"active\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user\": {\n    \"name\": \"Default value\",\n    \"active\" : true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/users/{{default_userID}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All  users - valid API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is an array', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Array contains at least 1 users', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.greaterThanOrEqual(1);",
+									"});",
+									"",
+									"pm.test('Each user has required fields', function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.forEach(function(user) {",
+									"        pm.expect(user.id).to.exist;",
+									"        pm.expect(user.name).to.exist;",
+									"        pm.expect(user.username).to.exist;",
+									"        pm.expect(user.role).to.exist;",
+									"        pm.expect(user.active).to.exist;",
+									"        pm.expect(user.created_at).to.exist;",
+									"        pm.expect(user.updated_at).to.exist;",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is a JSON object\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an(\"object\");",
+									"});",
+									"",
+									"pm.test(\"User object contains all required fields\", function () {",
+									"    const user = pm.response.json();",
+									"",
+									"    const requiredFields = [",
+									"        \"id\",",
+									"        \"name\",",
+									"        \"username\",",
+									"        \"role\",",
+									"        \"active\",",
+									"        \"created_at\",",
+									"        \"updated_at\"",
+									"    ];",
+									"",
+									"    requiredFields.forEach(field => {",
+									"        pm.expect(user, `Missing field: ${field}`).to.have.property(field);",
+									"        pm.expect(user[field]).to.not.be.undefined;",
+									"        pm.expect(user[field]).to.not.be.null;",
+									"    });",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{auth_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/users/{{user_ID}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All  users - Invalid token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401 OK', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Unauthorized');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{Inactive_user_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Activated user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response message is correct', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.equal('User activated successfully');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/users/{{Inactive_user_ID}}/activate"
+					},
+					"response": []
+				}
+			],
+			"description": "We will be testing all the users API with all the functionality mentioned."
+		},
+		{
+			"name": "Senders",
+			"item": [
+				{
+					"name": "Admin Sender Request (Self)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Sender has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"});",
+									"",
+									"pm.test(\"Sender belongs to some user\", function () {",
+									"    pm.expect(json.username).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"Active is true (admin created)\", function () {",
+									"    pm.expect(json.active).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Origin URI is set correctly\", function () {",
+									"    pm.expect(json.origin_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Sender Request (other)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Sender has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"});",
+									"",
+									"pm.test(\"Sender belongs to some user\", function () {",
+									"    pm.expect(json.username).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"Active is true (admin created)\", function () {",
+									"    pm.expect(json.active).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Origin URI is set correctly\", function () {",
+									"    pm.expect(json.origin_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "User Sender Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Sender has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"    pm.collectionVariables.set('inactiveSenderID', json.id);",
+									"});",
+									"",
+									"pm.test(\"Active is false (user created)\", function () {",
+									"    pm.expect(json.active).to.eql(false);",
+									"});",
+									"",
+									"pm.test(\"Origin URI is set correctly\", function () {",
+									"    pm.expect(json.origin_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "Inactive token sender creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401 Created', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Unauthorized');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{inactive_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Senders - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const list = pm.response.json();",
+									"",
+									"pm.test(\"Admin sees an array of senders\", function () {",
+									"    pm.expect(list).to.be.an(\"array\");",
+									"    pm.expect(list.length).to.be.above(0);",
+									"});",
+									"",
+									"// Ensure at least one sender is active true (admin-created) if that exists",
+									"pm.test(\"At least one sender is active=true (from admin create)\", function () {",
+									"    pm.expect(list.some(s => s.active === true)).to.be.true;",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Senders - Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const list = pm.response.json();",
+									"",
+									"pm.test(\"User sees an array\", function () {",
+									"    pm.expect(list).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders"
+					},
+					"response": []
+				},
+				{
+					"name": "Activate sender - using admin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Active is set to true\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.active).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders/{{inactiveSenderID}}/activate"
+					},
+					"response": []
+				},
+				{
+					"name": "Activate sender - user token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 403 OK', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Only admin can activate senders');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders/{{inactiveSenderID}}/activate"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Consumers",
+			"item": [
+				{
+					"name": "Admin Consumer Request (Self)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Consumer has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"});",
+									"",
+									"pm.test(\"Consumer belongs to some user\", function () {",
+									"    pm.expect(json.username).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"Active is true (admin created)\", function () {",
+									"    pm.expect(json.active).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Target URI is set correctly\", function () {",
+									"    pm.expect(json.target_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Consumer Request (other)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Consumer has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"});",
+									"",
+									"pm.test(\"Consumer belongs to some user\", function () {",
+									"    pm.expect(json.username).to.be.a(\"string\");",
+									"});",
+									"",
+									"pm.test(\"Active is true (admin created)\", function () {",
+									"    pm.expect(json.active).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Target URI is set correctly\", function () {",
+									"    pm.expect(json.target_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{defaultUsername}}\",\n    \"consumer\": {\n        \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n        \"active\": true\n    },\n    \"origin_uris\": [\n        \"https://research-organisation.org/inbox/\",\n        \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "User Consumer Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"const json = pm.response.json();",
+									"",
+									"pm.test(\"Consumer has an ID\", function () {",
+									"    pm.expect(json.id).to.be.a(\"number\");",
+									"    pm.collectionVariables.set('inactiveConsumerID', json.id);",
+									"});",
+									"",
+									"pm.test(\"Active is false (user created)\", function () {",
+									"    pm.expect(json.active).to.eql(false);",
+									"});",
+									"",
+									"pm.test(\"Taregt URI is set correctly\", function () {",
+									"    pm.expect(json.target_uri).to.eql(\"https://evolbiol.peercommunityin.org/coar_notify/\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "Inactive token consumer creation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401 Created', function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Unauthorized');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{inactive_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Consumers - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const list = pm.response.json();",
+									"",
+									"pm.test(\"Admin sees an array of senders\", function () {",
+									"    pm.expect(list).to.be.an(\"array\");",
+									"    pm.expect(list.length).to.be.above(0);",
+									"});",
+									"",
+									"// Ensure at least one sender is active true (admin-created) if that exists",
+									"pm.test(\"At least one sender is active=true (from admin create)\", function () {",
+									"    pm.expect(list.some(s => s.active === true)).to.be.true;",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Consumers - Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const list = pm.response.json();",
+									"",
+									"pm.test(\"User sees an array\", function () {",
+									"    pm.expect(list).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers"
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Consumer - using admin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Active is set to true\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.active).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers/{{inactiveConsumerID}}/activate"
+					},
+					"response": []
+				},
+				{
+					"name": "Activate Consumer - user token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 403 OK', function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test('Response contains error', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.equal('Only admin can activate consumers');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers/{{inactiveConsumerID}}/activate"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Notification -User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Accept\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/objects/123\",\n    \"type\": \"Dataset\"\n  }\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Notification - Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol1.peercommunityin.org/coar_notify/\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid payload",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {},\n    \"target\": {}\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "All Notifications - User",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "All Notifications - Admin",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Type URI",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/coar_notify_inbox/notifications/sender/https://evolbiol.peercommunityin.org/coar_notify"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "6973a5caf60e393c284eeeaa57bcbadff306a9a2",
+			"type": "string"
+		},
+		{
+			"key": "active_user_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "active_admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "inactive_admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "Inactive_user_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "Inactive_user_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "default_userID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminUsername",
+			"value": "varadekd",
+			"type": "string"
+		},
+		{
+			"key": "normalUsername",
+			"value": "testUser",
+			"type": "string"
+		},
+		{
+			"key": "defaultUsername",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "inactiveSenderID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "inactiveConsumerID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

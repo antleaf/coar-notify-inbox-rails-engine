@@ -11,75 +11,65 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
-  create_table "coar_notify_inbox_consumer_origins", force: :cascade do |t|
-    t.integer "consumer_id", null: false
-    t.integer "origin_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["consumer_id", "origin_id"], name: "idx_on_consumer_id_origin_id_51018369ec", unique: true
-    t.index ["consumer_id"], name: "index_coar_notify_inbox_consumer_origins_on_consumer_id"
-    t.index ["origin_id"], name: "index_coar_notify_inbox_consumer_origins_on_origin_id"
-  end
-
   create_table "coar_notify_inbox_consumers", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "target_id"
-    t.boolean "active", default: false
+    t.string "username", null: false
+    t.string "target_uri", null: false
+    t.json "origin_uris", default: [], null: false
+    t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["target_id"], name: "index_coar_notify_inbox_consumers_on_target_id"
-    t.index ["user_id"], name: "index_coar_notify_inbox_consumers_on_user_id"
+    t.index ["username", "target_uri"], name: "index_coar_notify_inbox_consumers_on_username_and_target_uri", unique: true
   end
 
   create_table "coar_notify_inbox_notification_types", force: :cascade do |t|
-    t.string "notification_type"
+    t.string "name", null: false
+    t.text "description"
+    t.text "notification_ids"
+    t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_coar_notify_inbox_notification_types_on_name", unique: true
   end
 
   create_table "coar_notify_inbox_notifications", force: :cascade do |t|
-    t.integer "user_id", null: false
+    t.string "username", null: false
+    t.text "origin_uri", null: false
+    t.text "target_uri", null: false
+    t.text "raw_payload", null: false
     t.integer "notification_type_id", null: false
-    t.integer "origin_id", null: false
-    t.integer "target_id", null: false
-    t.json "payload", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["notification_type_id"], name: "index_coar_notify_inbox_notifications_on_notification_type_id"
-    t.index ["origin_id"], name: "index_coar_notify_inbox_notifications_on_origin_id"
-    t.index ["target_id"], name: "index_coar_notify_inbox_notifications_on_target_id"
-    t.index ["user_id"], name: "index_coar_notify_inbox_notifications_on_user_id"
+    t.index ["origin_uri"], name: "index_coar_notify_inbox_notifications_on_origin_uri"
+    t.index ["target_uri"], name: "index_coar_notify_inbox_notifications_on_target_uri"
+    t.index ["username"], name: "index_coar_notify_inbox_notifications_on_username"
   end
 
   create_table "coar_notify_inbox_origins", force: :cascade do |t|
     t.string "uri", null: false
+    t.json "senders", default: [], null: false
+    t.json "consumers", default: [], null: false
+    t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["uri"], name: "index_coar_notify_inbox_origins_on_uri", unique: true
   end
 
-  create_table "coar_notify_inbox_sender_targets", force: :cascade do |t|
-    t.integer "sender_id", null: false
-    t.integer "target_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["sender_id", "target_id"], name: "idx_on_sender_id_target_id_862d019f1e", unique: true
-    t.index ["sender_id"], name: "index_coar_notify_inbox_sender_targets_on_sender_id"
-    t.index ["target_id"], name: "index_coar_notify_inbox_sender_targets_on_target_id"
-  end
-
   create_table "coar_notify_inbox_senders", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "origin_id"
-    t.boolean "active", default: false
+    t.string "username", null: false
+    t.string "origin_uri", null: false
+    t.json "target_uris", default: [], null: false
+    t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["origin_id"], name: "index_coar_notify_inbox_senders_on_origin_id"
-    t.index ["user_id"], name: "index_coar_notify_inbox_senders_on_user_id"
+    t.index ["username", "origin_uri"], name: "index_coar_notify_inbox_senders_on_username_and_origin_uri", unique: true
   end
 
   create_table "coar_notify_inbox_targets", force: :cascade do |t|
     t.string "uri", null: false
+    t.json "senders", default: [], null: false
+    t.json "consumers", default: [], null: false
+    t.integer "lock_version", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["uri"], name: "index_coar_notify_inbox_targets_on_uri", unique: true
@@ -89,23 +79,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_27_085450) do
     t.string "username", null: false
     t.string "name"
     t.string "auth_token"
-    t.integer "role"
-    t.boolean "active"
+    t.integer "role", default: 0, null: false
+    t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["auth_token"], name: "index_coar_notify_inbox_users_on_auth_token", unique: true
+    t.index ["username"], name: "index_coar_notify_inbox_users_on_username", unique: true
   end
 
-  add_foreign_key "coar_notify_inbox_consumer_origins", "coar_notify_inbox_consumers", column: "consumer_id"
-  add_foreign_key "coar_notify_inbox_consumer_origins", "coar_notify_inbox_origins", column: "origin_id"
-  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "user_id"
+  add_foreign_key "coar_notify_inbox_consumers", "coar_notify_inbox_users", column: "username", primary_key: "username"
   add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_notification_types", column: "notification_type_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_origins", column: "origin_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_notifications", "coar_notify_inbox_users", column: "user_id"
-  add_foreign_key "coar_notify_inbox_sender_targets", "coar_notify_inbox_senders", column: "sender_id"
-  add_foreign_key "coar_notify_inbox_sender_targets", "coar_notify_inbox_targets", column: "target_id"
-  add_foreign_key "coar_notify_inbox_senders", "coar_notify_inbox_origins", column: "origin_id"
-  add_foreign_key "coar_notify_inbox_senders", "coar_notify_inbox_users", column: "user_id"
+  add_foreign_key "coar_notify_inbox_senders", "coar_notify_inbox_users", column: "username", primary_key: "username"
 end

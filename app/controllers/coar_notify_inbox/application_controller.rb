@@ -11,7 +11,7 @@ module CoarNotifyInbox
     def load_and_authenticate_current_user!
       token = request.headers["Authorization"]&.split(" ")&.last
       @current_user = CoarNotifyInbox::User.find_by(auth_token: token, active: true)
-      render json: { error: "Unauthorized" }, status: :unauthorized unless @current_user&.admin?
+      render json: { error: "Unauthorized" }, status: :unauthorized unless @current_user
     end
   end
 end
