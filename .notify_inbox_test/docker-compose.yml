@@ -1,20 +1,47 @@
+networks:
+  internal:
+
 services:
-  web:
-    build: .
-    working_dir: /app/.notify_inbox_test
-    volumes:
-      # Mount the engine root at /app so path: "../" in Gemfile resolves correctly
-      - ..:/app
-      - bundle:/usr/local/bundle
-    ports:
-      # 3001 avoids conflicts with host ports (5432, 6379 in use; clears 3000 too)
-      - "3001:3000"
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      RAILS_ENV: development
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ${DOCKER_VOLUMES_PATH_PREFIX:-}db:/var/lib/postgresql/data
+    networks:
+      - internal
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ..
+      dockerfile: .notify_inbox_test/Dockerfile
+      args:
+        RAILS_ENV: ${RAILS_ENV:-production}
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - internal
+    expose:
+      - 3000
+    ports:
+      - ${WEB_PORT:-3001}:3000
+    depends_on:
+      db:
+        condition: service_healthy
     command: >
-      sh -c "bundle install &&
-             bin/rails db:prepare &&
+      sh -c "bin/rails db:prepare &&
              bin/rails server -b 0.0.0.0"
 
 volumes:
-  bundle:
+  db:
