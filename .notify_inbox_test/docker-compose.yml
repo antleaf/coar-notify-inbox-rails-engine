@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /app/.notify_inbox_test
+    volumes:
+      # Mount the engine root at /app so path: "../" in Gemfile resolves correctly
+      - ..:/app
+      - bundle:/usr/local/bundle
+    ports:
+      # 3001 avoids conflicts with host ports (5432, 6379 in use; clears 3000 too)
+      - "3001:3000"
+    environment:
+      RAILS_ENV: development
+    command: >
+      sh -c "bundle install &&
+             bin/rails db:prepare &&
+             bin/rails server -b 0.0.0.0"
+
+volumes:
+  bundle:
