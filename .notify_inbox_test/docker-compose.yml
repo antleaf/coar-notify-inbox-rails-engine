@@ -1,8 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: .
     working_dir: /app/.notify_inbox_test
     volumes:
       # Mount the engine root at /app so path: "../" in Gemfile resolves correctly
