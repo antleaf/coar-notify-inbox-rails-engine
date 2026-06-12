@@ -20,7 +20,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The app will be available at `http://localhost:3001/coar_notify_inbox`.
+The app will be available at `http://localhost:${WEB_PORT}/coar_notify_inbox`.
 
 ---
 
@@ -164,7 +164,7 @@ puts admin.auth_token
 
 ```bash
 ADMIN_TOKEN="<token from above>"
-BASE="http://localhost:3001/coar_notify_inbox"
+BASE=`http://localhost:${WEB_PORT}/coar_notify_inbox`
 ```
 
 ### 3. Create and activate a regular user
