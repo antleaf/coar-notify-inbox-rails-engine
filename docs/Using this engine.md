@@ -51,9 +51,9 @@ rails server
 
 ## Testing the engine with the test rails application 
 
-If you would like to try the engine before embedding it in your rails application, a test rails application is available as a part of this repository in the directory [.notify_inbox_test](.notify_inbox_test)
+If you would like to try the engine before embedding it in your rails application, a test rails application is available as a part of this repository in the directory [.notify_inbox_test](../.notify_inbox_test)
 
-The [.notify_inbox_test/README.md](.notify_inbox_test/README.md) has instructions on how to run the application
+The [.notify_inbox_test/README.md](../.notify_inbox_test/README.md) has instructions on how to run the application
 
 ---
 
