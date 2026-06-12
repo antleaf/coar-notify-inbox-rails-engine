@@ -10,8 +10,6 @@ There are instruction below on how to use this engine as a gem within your rails
 
 Follow these steps in your **host Rails application**
 
----
-
 ### 1. Add the engine to your Gemfile (from GitHub)
 
 ```ruby
@@ -47,17 +45,7 @@ rails server
 
 **NOTE:** To verify the engine is mounted paste the URL `http://localhost:3000/coar_notify_inbox/senders` in the browser. You should see "Unauthorized" until you create users (correct behavior)
 
----
-
-## Testing the engine with the test rails application 
-
-If you would like to try the engine before embedding it in your rails application, a test rails application is available as a part of this repository in the directory [.notify_inbox_test](../.notify_inbox_test)
-
-The [.notify_inbox_test/README.md](../.notify_inbox_test/README.md) has instructions on how to run the application
-
----
-
-## Initial setup
+### 5. Initial setup
 
 Once you have the engine up and running, it is very important to create an admin user. This will generate an auth_token for the admin user, which is needed to using the engine through its API.
 
@@ -78,6 +66,13 @@ puts "Admin Token: #{admin.auth_token}"
 
 ---
 
+## Testing the engine with the test rails application 
+
+If you would like to try the engine before embedding it in your rails application, a test rails application is available as a part of this repository in the directory [.notify_inbox_test](../.notify_inbox_test)
+
+The [.notify_inbox_test/README.md](../.notify_inbox_test/README.md) has instructions on how to run the application
+
+---
 
 ## API documentation
 

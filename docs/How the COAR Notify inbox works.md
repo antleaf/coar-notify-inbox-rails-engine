@@ -1,4 +1,4 @@
-# How the COAR Notify inbox works
+# How the COAR Notify Inbox works
 
 A REST API-only Rails engine that receives, stores, and serves COAR Notify notifications. There is no UI — everything is done via HTTP API calls using a Bearer token.
 

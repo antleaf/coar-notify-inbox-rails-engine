@@ -9,19 +9,19 @@ This engine is designed to operate both as a standalone COAR Notify inbox, suppo
 Detailed documentation is available in the [docs](docs/) directory:
 
 ### Getting Started
-- [Using This Engine](docs/Using%20this%20engine.md)
+- [Using this engine](docs/Using%20this%20engine.md)
   - Using the engine as a gem
   - Testing the engine with the test Rails application
   - Initial setup
 
 ### Architecture
-- [How the COAR Notify Inbox Works](docs/How%20the%20COAR%20Notify%20inbox%20works.md)
+- [How the COAR Notify Inbox works](docs/How%20the%20COAR%20Notify%20Inbox%20works.md)
 
 ### API Reference
-- [API Documentation](docs/API_DOCUMENTATION.md)
+- [API documentation](docs/API_documentation.md)	
 
 ### Testing
-- [Postman Collection](docs/POSTMAN_COLLECTION.md)
+- [Postman collection](docs/Postman_collection.md)
 
 ## Contributing
 PRs are welcome.
