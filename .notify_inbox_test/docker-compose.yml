@@ -27,7 +27,6 @@ services:
       dockerfile: .notify_inbox_test/Dockerfile
       args:
         RAILS_ENV: ${RAILS_ENV:-production}
-    restart: unless-stopped
     env_file:
       - .env
     networks:
