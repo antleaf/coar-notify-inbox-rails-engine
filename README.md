@@ -2,22 +2,28 @@
 
 A Rails engine providing a COAR Notify Inbox.
 
-This is designed to function as a standalone COAR Notify inbox supporting [v1.0.1 of the COAR Notify specification](https://coar-notify.net/specification/1.0.1/), but also to be integrated into a [Samvera Hyrax](https://github.com/samvera/hyrax) (v5.2) repository. It is therefore implemented in Rails 7.2 which is a requirement of Hyrax 5.2.
+This engine is designed to operate both as a standalone COAR Notify inbox, supporting [v1.0.1 of the COAR Notify specification](https://coar-notify.net/specification/1.0.1/), and as an integrated component of a [Samvera Hyrax](https://github.com/samvera/hyrax) (v5.2) application via [Hyrax COAR Notify](https://github.com/antleaf/hyrax-coar-notify). To ensure compatibility with Hyrax 5.2, it is built using Rails 7.2.
 
-There is a [related Hyrax 5.2 integration GitHub repository](https://github.com/antleaf/hyrax-coar-notify). 
+## Documentation
 
----
+Detailed documentation is available in the [docs](docs/) directory:
 
-# Using This Engine as a Gem (from GitHub)
+### Getting Started
+- [Using this engine](docs/Using%20this%20engine.md)
+  - Using the engine as a gem
+  - Testing the engine with the test Rails application
+  - Initial setup
 
-Follow these steps in your **host Rails application**:
+### Architecture
+- [How the COAR Notify Inbox works](docs/How%20the%20COAR%20Notify%20Inbox%20works.md)
 
----
+### API Reference
+- [API documentation](docs/API_documentation.md)	
 
 ## 1. Add the engine to your Gemfile
 
 ```ruby
-gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine", branch: "feature/notification"
+gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine"
 ```
 ## 2. Install Gem
 ```bash
