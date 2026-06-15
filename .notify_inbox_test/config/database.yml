@@ -82,6 +82,8 @@ test:
 production:
     <<: *default
     adapter: postgresql
-    database: notify_inbox_test_production
-    username: notify_inbox_test
-    password: <%= ENV["NOTIFY_INBOX_TEST_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("DB_HOST", "db") %>
+    port: <%= ENV.fetch("DB_PORT", "5432") %>
+    database: <%= ENV.fetch("POSTGRES_DB", "notify_inbox_production") %>
+    username: <%= ENV.fetch("POSTGRES_USER", "notify_inbox") %>
+    password: <%= ENV["POSTGRES_PASSWORD"] %>
