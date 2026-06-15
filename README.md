@@ -20,8 +20,53 @@ Detailed documentation is available in the [docs](docs/) directory:
 ### API Reference
 - [API documentation](docs/API_documentation.md)	
 
-### Testing
-- [Postman collection](docs/Postman_collection.md)
+## 1. Add the engine to your Gemfile
+
+```ruby
+gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine"
+```
+## 2. Install Gem
+```bash
+bundle install
+```
+## 3. Run migrations
+```bash
+rails db:create db:migrate
+```
+ ## 4. Mount the engine
+ ```ruby
+ # config/routes.rb
+ Rails.application.routes.draw do
+  mount CoarNotifyInbox::Engine => "/coar_notify_inbox"
+end
+```
+Start the server 
+```bash
+rails server
+```
+**To verify the engine is mounted paste the URL `http://localhost:3000/coar_notify_inbox/senders` in the browser. You should see "Unauthorized" until you create users (correct behavior).**
+
+---
+# Initial Setup (Very Important)
+Open a Rails console in the host app:
+```ruby
+rails console
+```
+Create an admin: (copy and paste this inside rails console)
+```bash
+admin = CoarNotifyInbox::User.create!(username: "admin", name: "Admin", role: :admin, active: true)
+puts "Admin Token: #{admin.auth_token}"
+```
+copy the token since you will require this token to access API's using `Authorization: Bearer <TOKEN>`
+---
+
+# API Documentation
+Full API documentation (with request + response examples) is available here: [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)
+
+# Postman Collection (Recommended for Testing)
+A complete Postman test suite is provided.
+Import these two files:
+ - Instructions for use: [docs/POSTMAN_COLLECTION.md](docs/POSTMAN_COLLECTION.md)
 
 ## Contributing
 PRs are welcome.
