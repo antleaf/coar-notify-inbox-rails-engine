@@ -1,4 +1,4 @@
-# API Documentation — COAR Notify Inbox
+# API documentation — COAR Notify Inbox
 
 This document describes the HTTP API provided by the `coar_notify_inbox` engine for **Users**, **Senders**, and **Consumers**.
 Base path (when the engine is mounted at `/coar_notify_inbox`):
@@ -23,7 +23,7 @@ Authorization: Bearer <auth_token>
 
 ---
 
-# Users API
+## Users API
 
 ### Summary
 Manage engine users (admin-only creation). Users have `role` (user|admin), `username`, `name`, `auth_token`, and `active` flags.
@@ -140,7 +140,7 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/users/42/activate \
 
 ---
 
-# Senders API
+## Senders API
 
 ### Summary
 Senders represent sources of notifications. Unique constraint: **username + origin_uri**. Only the user who owns the username (or admin) can manage senders.
@@ -245,7 +245,7 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/senders/10/activate \
 
 ---
 
-# Consumers API
+## Consumers API
 
 ### Summary
 Consumers represent endpoints that receive notifications. Unique constraint: **username + target_uri**.
@@ -310,7 +310,7 @@ Admin-only — set active = true.
 
 ---
 
-# Notifications API
+## Notifications API
 
 ### Summary
 Incoming notifications are:
@@ -401,7 +401,7 @@ Create a notification.
 ```
 ---
 
-# Origins & Targets (background indexing)
+## Origins & Targets (background indexing)
 
 - When Senders or Consumers are created/updated, the engine enqueues `CoarNotifyInbox::UpdateOriginsTargetsJob` (ActiveJob) to maintain two tables:
   - `coar_notify_inbox_origins` — rows: `{ id, uri, senders: [ids], consumers: [ids] }`
@@ -411,7 +411,7 @@ Create a notification.
 
 ---
 
-# Error codes & common responses
+## Error codes & common responses
 
 - `200 OK` — successful read/update
 - `201 Created` — resource created
@@ -425,12 +425,12 @@ Create a notification.
 
 ---
 
-# Example flows (quick)
+## Example flows (quick)
 
-## 1. Create user (admin)
+### 1. Create user (admin)
 Use Rails console or `POST /users` (admin token).
 
-## 2. Create consumer (testuser)
+### 2. Create consumer (testuser)
 ```bash
 curl -X POST "{{BASE_URL}}/consumers" \
   -H "Authorization: Bearer <TESTUSER_TOKEN>" \
@@ -441,7 +441,7 @@ curl -X POST "{{BASE_URL}}/consumers" \
   }'
 ```
 
-## 3. Create sender (testuser)
+### 3. Create sender (testuser)
 ```bash
 curl -X POST "{{BASE_URL}}/senders" \
   -H "Authorization: Bearer <TESTUSER_TOKEN>" \
@@ -452,7 +452,7 @@ curl -X POST "{{BASE_URL}}/senders" \
   }'
 ```
 
-## 4. Create notification (example)
+### 4. Create notification (example)
 ```bash
 curl --location '{{BASE_URL}}/notifications' \
 --header 'Content-Type: application/json' \

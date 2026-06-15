@@ -66,9 +66,10 @@ module CoarNotifyInbox
       # ----------------------------------------------------------
       # 6. Notification type (auto-managed)
       # ----------------------------------------------------------
+      type_name = Array(raw_payload["type"]).join(", ")
       notification_type =
         CoarNotifyInbox::NotificationType.find_or_create_by!(
-          name: raw_payload["type"]
+          name: type_name
         )
 
       # ----------------------------------------------------------
