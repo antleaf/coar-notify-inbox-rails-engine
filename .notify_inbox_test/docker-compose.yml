@@ -38,11 +38,7 @@ services:
       - ${WEB_PORT}:3000
     depends_on:
       - db
-    command: >
-      sh -c "until pg_isready -h ${DB_HOST} -U ${POSTGRES_USER};
-             do echo 'waiting for db...'; sleep 2; done
-             && bin/rails db:prepare
-             && bin/rails server -b 0.0.0.0"
+    command: bin/docker-start
 
 volumes:
   db:
