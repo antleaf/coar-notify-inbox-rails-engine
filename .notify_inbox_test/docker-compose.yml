@@ -1,3 +1,5 @@
+version: '3'
+
 networks:
   internal:
 
@@ -10,37 +12,33 @@ services:
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - ${DOCKER_VOLUMES_PATH_PREFIX:-}db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
     networks:
       - internal
     expose:
       - 5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
 
   web:
     build:
       context: ..
       dockerfile: .notify_inbox_test/Dockerfile
       args:
-        RAILS_ENV: ${RAILS_ENV:-production}
+        RAILS_ENV: ${RAILS_ENV}
     env_file:
       - .env
+    restart: unless-stopped
     networks:
       - internal
-    expose:
-      - 3000
     ports:
-      - ${WEB_PORT:-3001}:3000
+      - ${WEB_PORT}:3000
     depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      sh -c "bin/rails db:prepare &&
-             bin/rails server -b 0.0.0.0"
+      - db
+    command: bin/docker-start
 
 volumes:
   db:

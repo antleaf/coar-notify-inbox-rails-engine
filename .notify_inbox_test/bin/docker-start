@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+until pg_isready -h "$DB_HOST" -U "$POSTGRES_USER"; do
+  echo "waiting for db..."
+  sleep 2
+done
+
+bin/rails db:prepare
+exec bin/rails server -b 0.0.0.0

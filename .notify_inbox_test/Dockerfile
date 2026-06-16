@@ -3,7 +3,7 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-      build-essential git libpq-dev libsqlite3-dev libyaml-dev pkg-config && \
+      build-essential git libpq-dev libyaml-dev pkg-config postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 ENV BUNDLE_PATH="/usr/local/bundle"
