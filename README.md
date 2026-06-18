@@ -44,7 +44,7 @@ Start the server
 ```bash
 rails server
 ```
-**To verify the engine is mounted paste the URL `http://localhost:3000/coar_notify_inbox/senders` in the browser. You should see "Unauthorized" until you create users (correct behavior).**
+**To verify the engine is mounted paste the URL `http://localhost:${PORT}/coar_notify_inbox/senders` in the browser. You should see "Unauthorized" until you create users (correct behavior).**
 
 ---
 # Initial Setup (Very Important)
