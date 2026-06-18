@@ -747,7 +747,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -803,7 +803,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -858,7 +858,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -901,7 +901,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1108,7 +1108,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1164,7 +1164,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{defaultUsername}}\",\n    \"consumer\": {\n        \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n        \"active\": true\n    },\n    \"origin_uris\": [\n        \"https://research-organisation.org/inbox/\",\n        \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ]\n}",
+							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1218,7 +1218,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1261,7 +1261,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1435,7 +1435,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"type\": \"Accept\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/objects/123\",\n    \"type\": \"Dataset\"\n  }\n}\n",
+							"raw": "{\n  \"type\": \"Accept\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/objects/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1459,7 +1459,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repo.example/object/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1483,7 +1483,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol1.peercommunityin.org/coar_notify/\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}\n",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {\n    \"inbox\": \"https://unknown-origin.example/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repo.example/object/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1507,7 +1507,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {},\n    \"target\": {}\n  }",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {},\n  \"target\": {}\n}",
 							"options": {
 								"raw": {
 									"language": "json"

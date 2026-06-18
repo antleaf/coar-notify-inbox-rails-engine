@@ -9,7 +9,6 @@ module CoarNotifyInbox
     # ----------------------
     validates :username, presence: true
     validates :target_uri, presence: true
-    validates :origin_uris, presence: true
     validates :active, inclusion: { in: [true, false] }
 
     # uniqueness: username + target_uri
