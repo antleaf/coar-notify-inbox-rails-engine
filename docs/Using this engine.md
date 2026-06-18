@@ -13,7 +13,7 @@ Follow these steps in your **host Rails application**
 ### 1. Add the engine to your Gemfile (from GitHub)
 
 ```ruby
-gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine", branch: "feature/notification"
+gem "coar_notify_inbox", git: "https://github.com/antleaf/coar-notify-inbox-rails-engine"
 ```
 
 ### 2. Install gem
