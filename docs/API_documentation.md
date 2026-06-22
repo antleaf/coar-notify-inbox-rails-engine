@@ -13,13 +13,13 @@ All requests require authentication with a user token unless otherwise noted.
 
 ## Authentication
 
-- Every request (except when running in a development console) must include an Authorization header:
+Every request must include an Authorization header:
 
 ```
 Authorization: Bearer <auth_token>
 ```
 
-- Tokens are generated when a `User` is created. Admin users can rotate tokens via the API.
+Tokens are generated when a `User` is created. Admin users can rotate tokens via the API.
 
 ---
 
@@ -34,7 +34,6 @@ Manage engine users (admin-only creation). Users have `role` (user|admin), `user
 List users.
 
 - Auth: required (must be active). Admin can list all; non-admins — ability controlled by CanCan (usually not allowed).
-- Response: array of users.
 
 **curl**
 ```bash
@@ -85,19 +84,13 @@ curl -X POST http://localhost:3000/coar_notify_inbox/users \
 #### GET /users/:id
 Show user.
 
-**curl**
-```bash
-curl -H "Authorization: Bearer <ADMIN_TOKEN>" \
-  GET http://localhost:3000/coar_notify_inbox/users/42
-```
-
 **Success (200)**
 ```json
 { "id": 42, "name": "Test User", "username": "testuser", "role": "user", "active": true, "created_at":"...", "updated_at":"..." }
 ```
 
 #### PUT /users/:id
-Update user details. Only admin can set `active: true`. Non-admins cannot activate.
+Update user details. Only admin can set `active: true`.
 
 - Allowed fields: `name`, `active` (admin only).
 - Request body: `{ "user": { "name": "New name", "active": false } }`
@@ -107,17 +100,8 @@ Update user details. Only admin can set `active: true`. Non-admins cannot activa
 { "message": "User updated", "data": { "id": 42, "name": "New name", "active": false, "created_at": "...", "updated_at":"..." } }
 ```
 
-**Errors**
-- `422 Unprocessable Entity` — validation failures.
-
 #### PUT /users/:id/auth_token
 Rotate/re-generate a user's token. **Admin-only**.
-
-**curl**
-```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/users/42/auth_token \
-  -H "Authorization: Bearer <ADMIN_TOKEN>"
-```
 
 **Success (200)**
 ```json
@@ -126,12 +110,6 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/users/42/auth_token \
 
 #### PUT /users/:id/activate
 Activate a user (set `active` to true). **Admin-only**.
-
-**curl**
-```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/users/42/activate \
-  -H "Authorization: Bearer <ADMIN_TOKEN>"
-```
 
 **Success (200)**
 ```json
@@ -143,86 +121,88 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/users/42/activate \
 ## Senders API
 
 ### Summary
-Senders represent sources of notifications. Unique constraint: **username + origin_uri**. Only the user who owns the username (or admin) can manage senders.
+Senders represent services that send COAR Notify notifications into this inbox. Unique constraint: **username + origin_uri**.
 
-- `username` is used as owner key (string).
-- `origin_uri`: single string.
-- `target_uris`: array of strings.
-- `active` boolean: only admin can set `true`; both admin/user can set to `false`.
-- Duplicate create (username + origin_uri exists) → `409 Conflict`.
+- `origin_uri` (required): the inbox URI of the sending service.
+- `target_uris` (optional): known target service URIs. Will be auto-populated as notifications arrive.
+- `active` boolean: only admin can set `true`; both admin/user can set `false`.
 
 ### Endpoints
 
 #### GET /senders
-List senders.
-
-- Admin: list all.
-- Non-admin: list only those where `username == current_user.username`.
-
-**curl**
-```bash
-curl -H "Authorization: Bearer <TOKEN>" \
-  GET http://localhost:3000/coar_notify_inbox/senders
-```
+List senders. Admin sees all; non-admin sees only their own.
 
 **Success (200)**
 ```json
 [
-  { "id": 1, "username": "testuser", "origin_uri": "https://origin/a/", "target_uris": ["https://t/1/"], "active": false, "created_at":"..." }
+  {
+    "id": 1,
+    "username": "testuser",
+    "origin_uri": "https://origin.example/coar_notify/",
+    "target_uris": ["https://consumer.example/inbox/"],
+    "active": false,
+    "created_at": "..."
+  }
 ]
 ```
 
 #### POST /senders
-Create a sender.
+Create a sender. All fields go inside the `sender` object.
 
-- Request body (examples accept `sender` object or top-level):
+**Request body**
 ```json
 {
   "sender": {
     "origin_uri": "https://origin.example/coar_notify/",
+    "target_uris": ["https://consumer.example/inbox/"],
     "active": false
-  },
-  "username": "testuser",       // when current_user is admin and wants to create for another user
-  "target_uris": [
-    "https://review-service.com/system",
-    "https://target2.example/coar_notify/"
-  ]
-}
-```
-
-**Rules**
-- If `current_user` is admin and `username` is provided, the engine checks that provided username exists and is active; otherwise returns `422`.
-- If `current_user` is non-admin, `username` is ignored and `current_user.username` is used.
-- If a sender with `(username, origin_uri)` already exists: return `409 Conflict` with message to update instead.
-- If non-admin sets `active: true`, it will be forced `false`.
-
-**Success (201)**
-```json
-{ "id": 10, "username": "testuser", "origin_uri": "https://origin.example/coar_notify/", "target_uris": ["https://target.example/coar_notify/"], "active": false }
-```
-
-**Errors**
-- `409 Conflict` — duplicate entry (username + origin_uri).
-- `422 Unprocessable Entity` — invalid payload, missing required fields.
-
-#### PUT /senders/:id
-Update sender. Only certain fields permitted: `origin_uri` (must still be unique with username), `target_uris` (replace exact), `active` (only admin can set `true`, both can set `false`).
-
-- Request body example:
-```json
-{
-  "sender": {
-    "origin_uri": "https://origin.example/new/",
-    "active": false,
-    "target_uris": ["https://targetA/","https://targetB/"]
   }
 }
 ```
 
-**Notes**
+Admin creating for another user — pass `username` at the top level:
+```json
+{
+  "username": "testuser",
+  "sender": {
+    "origin_uri": "https://origin.example/coar_notify/",
+    "target_uris": ["https://consumer.example/inbox/"],
+    "active": true
+  }
+}
+```
+
+**Rules**
+- `origin_uri` is required.
+- `target_uris` is optional (defaults to `[]`). The system will append new targets automatically as notifications arrive.
+- If `current_user` is admin and `username` is provided at top level, the engine checks that username exists and is active; otherwise returns `422`.
+- If non-admin sets `active: true`, it will be forced `false`.
+- Duplicate `(username, origin_uri)` → `409 Conflict`.
+
+**Success (201)**
+```json
+{ "id": 10, "username": "testuser", "origin_uri": "https://origin.example/coar_notify/", "target_uris": [], "active": false }
+```
+
+**Errors**
+- `409 Conflict` — duplicate (username + origin_uri).
+- `422 Unprocessable Entity` — missing `origin_uri` or invalid fields.
+
+#### PUT /senders/:id
+Update sender. All fields inside the `sender` object.
+
+```json
+{
+  "sender": {
+    "origin_uri": "https://origin.example/new/",
+    "target_uris": ["https://targetA/", "https://targetB/"],
+    "active": false
+  }
+}
+```
+
 - `username` cannot be changed.
-- If `origin_uri` is changed, it must not conflict with another sender for same username (409 on conflict).
-- `target_uris` are replaced exactly with the provided payload (current behavior; TODO in code allows changing this later).
+- `target_uris` are replaced exactly with the provided array.
 
 **Success (200)**
 ```json
@@ -230,13 +210,7 @@ Update sender. Only certain fields permitted: `origin_uri` (must still be unique
 ```
 
 #### PUT /senders/:id/activate
-Admin-only endpoint to set `active: true`.
-
-**curl**
-```bash
-curl -X PUT http://localhost:3000/coar_notify_inbox/senders/10/activate \
-  -H "Authorization: Bearer <ADMIN_TOKEN>"
-```
+Admin-only — set `active: true`.
 
 **Success (200)**
 ```json
@@ -248,121 +222,131 @@ curl -X PUT http://localhost:3000/coar_notify_inbox/senders/10/activate \
 ## Consumers API
 
 ### Summary
-Consumers represent endpoints that receive notifications. Unique constraint: **username + target_uri**.
+Consumers represent services that pull notifications from this inbox. Unique constraint: **username + target_uri**.
 
-- `username` is owner key (string).
-- `target_uri` single string.
-- `origin_uris` array of origin URIs.
+- `target_uri` (required): the inbox URI of the consuming service.
+- `origin_uris` (optional): known sender URIs. Will be auto-populated as notifications arrive.
 - `active` boolean: only admin can set `true`; both admin/user can set `false`.
 
 ### Endpoints
 
 #### GET /consumers
-List consumers.
-
-- Admin: list all.
-- Non-admin: list only those where `username == current_user.username`.
+List consumers. Admin sees all; non-admin sees only their own.
 
 **Success (200)**
 ```json
 [
-  { "id": 5, "username": "testuser", "target_uri": "https://consumer.example/coar_notify/", "origin_uris": ["https://origin.example/coar_notify/"], "active": false }
+  {
+    "id": 5,
+    "username": "testuser",
+    "target_uri": "https://consumer.example/coar_notify/",
+    "origin_uris": ["https://origin.example/coar_notify/"],
+    "active": false
+  }
 ]
 ```
 
 #### POST /consumers
-Create a consumer.
+Create a consumer. All fields go inside the `consumer` object.
 
-- Body example:
+**Request body**
 ```json
 {
   "consumer": {
     "target_uri": "https://consumer.example/coar_notify/",
+    "origin_uris": ["https://origin.example/coar_notify/"],
     "active": false
-  },
-  "origin_uris": ["https://origin.example/coar_notify/"]
+  }
+}
+```
+
+Admin creating for another user:
+```json
+{
+  "username": "testuser",
+  "consumer": {
+    "target_uri": "https://consumer.example/coar_notify/",
+    "active": true
+  }
 }
 ```
 
 **Rules**
-- Admin may pass `username` to create a consumer for another user — the engine verifies the username exists & is active.
-- If consumer `(username, target_uri)` already exists → `409 Conflict`.
-- If non-admin sets `active: true` → will be forced `false`.
+- `target_uri` is required.
+- `origin_uris` is optional (defaults to `[]`). Auto-populated as notifications arrive.
+- Duplicate `(username, target_uri)` → `409 Conflict`.
+- If non-admin sets `active: true`, it will be forced `false`.
 
 **Success (201)**
 ```json
-{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/coar_notify/", "origin_uris":["https://origin.example/coar_notify/"], "active": false }
+{ "id": 5, "username": "testuser", "target_uri": "https://consumer.example/coar_notify/", "origin_uris": [], "active": false }
 ```
 
 #### PUT /consumers/:id
-Update consumer (allowed fields: `target_uri`, `origin_uris`, `active` with admin restriction).
+Update consumer. All fields inside `consumer` object.
 
 - `username` cannot be changed.
-- `origin_uris` are replaced with provided payload (TODO: option to append instead).
+- `origin_uris` are replaced exactly with the provided array.
 
 **Success (200)**
 ```json
-{ "id": 5, "username": "testuser", "target_uri":"https://consumer.example/coar_notify/", "origin_uris":["https://origin.example/coar_notify/","https://origin2.example/coar_notify/"], "active": false }
+{ "id": 5, "username": "testuser", "target_uri": "https://consumer.example/coar_notify/", "origin_uris": ["https://origin.example/coar_notify/"], "active": false }
 ```
 
 #### PUT /consumers/:id/activate
-Admin-only — set active = true.
+Admin-only — set `active: true`.
 
 ---
 
 ## Notifications API
 
 ### Summary
-Incoming notifications are:
-- Validated against the COAR Notify specification.
-- Stored as immutable records.
-- Queryable by user, sender, or consumer.
+Incoming notifications are validated, stored as immutable records, and queryable by user, sender, or consumer.
 
 ### Endpoints
 
-#### GET /notifications
-List notifications.
-
-- Admin: list all.
-- Non-admin: list only those where `username == current_user.username`.
-
-### Filter Notifications
-#### GET /notifications/:type/:uri
-
-Example Sender (origin ID): `/notifications/sender/https://origin.example/coar_notify/`
-Example Consumer (target ID) : `/notifications/consumer/https://origin.example/coar_notify/`
-
 #### POST /notifications
-Create a notification.
+Send a notification into the inbox.
 
-- Body example:
+The sender is identified by the `origin` field. The engine checks that the authenticated user has a registered sender with a matching `origin_uri`. **No check is performed against target URIs.**
+
+Both `id` and `inbox` are accepted on `origin` and `target` — `id` takes precedence if both are present.
+
+**Simplified format**
+```json
+{
+  "type": "Offer",
+  "origin": {
+    "inbox": "https://origin.example/coar_notify/"
+  },
+  "target": {
+    "inbox": "https://consumer.example/coar_notify/"
+  },
+  "object": {
+    "id": "https://repository.example/preprint/123",
+    "type": "Dataset"
+  }
+}
+```
+
+**Full COAR Notify format**
 ```json
 {
   "@context": [
     "https://www.w3.org/ns/activitystreams",
     "https://coar-notify.net"
   ],
+  "id": "urn:uuid:0370c0fb-bb78-4a9b-87f5-bed307a509dd",
+  "type": ["Offer", "coar-notify:ReviewAction"],
   "actor": {
     "id": "https://orcid.org/0000-0002-1825-0097",
     "name": "Josiah Carberry",
     "type": "Person"
   },
-  "id": "urn:uuid:0370c0fb-bb78-4a9b-87f5-bed307a509dd",
   "object": {
     "id": "https://research-organisation.org/repository/preprint/201203/421/",
     "ietf:cite-as": "https://doi.org/10.5555/12345680",
-    "ietf:item": {
-      "id": "https://research-organisation.org/repository/preprint/201203/421/content.pdf",
-      "mediaType": "application/pdf",
-      "type": [
-        "Article",
-        "sorg:ScholarlyArticle"
-      ]
-    },
-    "type": [
-      "Page",
-      "sorg:AboutPage"
-    ]
+    "type": ["Page", "sorg:AboutPage"]
   },
   "origin": {
     "id": "https://research-organisation.org/repository",
@@ -373,20 +357,14 @@ Create a notification.
     "id": "https://review-service.com/system",
     "inbox": "https://review-service.com/inbox/",
     "type": "Service"
-  },
-  "type": [
-    "Offer",
-    "coar-notify:ReviewAction"
-  ]
+  }
 }
-
-
 ```
 
-**Validation**
-- Must be valid COAR Notify JSON.
-- Origin ID must belong to a registered Sender.
-- Validation is performed internally using coarnotify.
+**Auto-population**
+After a notification is accepted, the engine automatically:
+- Appends the `target_uri` to the sender's `target_uris` (if not already present).
+- Appends the `origin_uri` to the matching consumer's `origin_uris` (if a consumer with that `target_uri` exists and the origin is not already listed).
 
 **Success (201)**
 ```json
@@ -394,109 +372,99 @@ Create a notification.
   "id": 1,
   "username": "testuser",
   "origin_uri": "https://origin.example/coar_notify/",
-  "target_uri": "https://consumer.example/coar_notifys/",
+  "target_uri": "https://consumer.example/coar_notify/",
   "notification_type": "Offer",
   "created_at": "2025-12-15T10:30:00Z"
 }
 ```
+
+**Errors**
+- `401 Unauthorized` — missing or invalid token.
+- `403 Forbidden` — origin URI not registered for this user.
+- `422 Unprocessable Entity` — missing required fields or invalid URI.
+
+#### GET /notifications
+List notifications. Admin sees all; non-admin sees only their own.
+
+#### GET /notifications/:type/:uri
+Filter notifications by sender origin or consumer target.
+
+- `type` must be `sender` or `consumer`.
+- `uri` is the origin URI (sender) or target URI (consumer).
+
+Example: `GET /notifications/sender/https://origin.example/coar_notify/`
+
 ---
 
 ## Origins & Targets (background indexing)
 
-- When Senders or Consumers are created/updated, the engine enqueues `CoarNotifyInbox::UpdateOriginsTargetsJob` (ActiveJob) to maintain two tables:
-  - `coar_notify_inbox_origins` — rows: `{ id, uri, senders: [ids], consumers: [ids] }`
-  - `coar_notify_inbox_targets` — rows: `{ id, uri, senders: [ids], consumers: [ids] }`
-- These are maintained as JSON arrays and updated with optimistic-locking & retries to avoid lost updates under concurrency.
-- This work is **asynchronous** (non-blocking) and may appear in the DB a short time after the API response completes.
+When Senders or Consumers are created/updated, the engine enqueues `CoarNotifyInbox::UpdateOriginsTargetsJob` (ActiveJob) to maintain two index tables:
+- `coar_notify_inbox_origins` — `{ id, uri, senders: [ids], consumers: [ids] }`
+- `coar_notify_inbox_targets` — `{ id, uri, senders: [ids], consumers: [ids] }`
+
+This is **asynchronous** and may appear in the DB a short time after the API response completes.
 
 ---
 
-## Error codes & common responses
+## Error codes
 
-- `200 OK` — successful read/update
-- `201 Created` — resource created
-- `202 Accepted` — used for async flows if applicable (not used in current APIs)
-- `301 / 303` — reserved for notification redirect semantics (not used by default)
-- `401 Unauthorized` — missing or invalid auth token
-- `403 Forbidden` — insufficient privileges (e.g., non-admin trying admin action)
-- `409 Conflict` — duplicate unique combination (username + origin_uri or username + target_uri)
-- `422 Unprocessable Entity` — validation errors (missing fields, invalid payload)
-- `500 Internal Server Error` — unexpected server errors (check logs)
+| Code | Meaning |
+|------|---------|
+| `200 OK` | Successful read/update |
+| `201 Created` | Resource created |
+| `401 Unauthorized` | Missing or invalid auth token |
+| `403 Forbidden` | Insufficient privileges |
+| `409 Conflict` | Duplicate unique combination |
+| `422 Unprocessable Entity` | Validation errors / missing fields |
+| `500 Internal Server Error` | Unexpected server errors |
 
 ---
 
-## Example flows (quick)
+## Example flows
 
 ### 1. Create user (admin)
-Use Rails console or `POST /users` (admin token).
-
-### 2. Create consumer (testuser)
 ```bash
-curl -X POST "{{BASE_URL}}/consumers" \
-  -H "Authorization: Bearer <TESTUSER_TOKEN>" \
+curl -X POST "{{BASE_URL}}/users" \
+  -H "Authorization: Bearer <ADMIN_TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{
-    "consumer": { "target_uri": "https://consumer.local/coar_notify/", "active": false },
-    "origin_uris": ["https://origin.local/coar_notify/"]
-  }'
+  -d '{ "user": { "name": "Test User", "username": "testuser", "role": "user", "active": true } }'
 ```
 
-### 3. Create sender (testuser)
+### 2. Create sender
 ```bash
 curl -X POST "{{BASE_URL}}/senders" \
-  -H "Authorization: Bearer <TESTUSER_TOKEN>" \
+  -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "sender": { "origin_uri": "https://origin.local/coar_notify/", "active": false },
-    "target_uris": ["https://consumer.local/coar_notify/"]
+    "sender": {
+      "origin_uri": "https://origin.local/coar_notify/",
+      "active": false
+    }
   }'
 ```
 
-### 4. Create notification (example)
+### 3. Create consumer
 ```bash
-curl --location '{{BASE_URL}}/notifications' \
---header 'Content-Type: application/json' \
---header 'Authorization: Bearer <TESTUSER_TOKEN>' \
---data '{
-  "@context": [
-    "https://www.w3.org/ns/activitystreams",
-    "https://coar-notify.net"
-  ],
-  "actor": {
-    "id": "https://orcid.org/0000-0002-1825-0097",
-    "name": "Josiah Carberry",
-    "type": "Person"
-  },
-  "id": "urn:uuid:0370c0fb-bb78-4a9b-87f5-bed307a509dd",
-  "object": {
-    "id": "https://research-organisation.org/repository/preprint/201203/421/",
-    "ietf:cite-as": "https://doi.org/10.5555/12345680",
-    "ietf:item": {
-      "id": "https://research-organisation.org/repository/preprint/201203/421/content.pdf",
-      "mediaType": "application/pdf",
-      "type": [
-        "Article",
-        "sorg:ScholarlyArticle"
-      ]
-    },
-    "type": [
-      "Page",
-      "sorg:AboutPage"
-    ]
-  },
-  "origin": {
-    "id": "https://research-organisation.org/repository",
-    "inbox": "https://research-organisation.org/inbox/",
-    "type": "Service"
-  },
-  "target": {
-    "id": "https://review-service.com/system",
-    "inbox": "https://review-service.com/inbox/",
-    "type": "Service"
-  },
-  "type": [
-    "Offer",
-    "coar-notify:ReviewAction"
-  ]
-}'
+curl -X POST "{{BASE_URL}}/consumers" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "consumer": {
+      "target_uri": "https://consumer.local/coar_notify/",
+      "active": false
+    }
+  }'
+```
+
+### 4. Send a notification
+```bash
+curl -X POST "{{BASE_URL}}/notifications" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "Offer",
+    "origin": { "inbox": "https://origin.local/coar_notify/" },
+    "target": { "inbox": "https://consumer.local/coar_notify/" },
+    "object": { "id": "https://repository.example/objects/123", "type": "Dataset" }
+  }'
 ```

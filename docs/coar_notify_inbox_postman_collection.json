@@ -694,6 +694,37 @@
 						"url": "{{base_url}}/coar_notify_inbox/users/{{Inactive_user_ID}}/activate"
 					},
 					"response": []
+				},
+				{
+					"name": "Rotate auth token - Admin only",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/users/{{user_ID}}/auth_token"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('Response contains new auth_token', function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.auth_token).to.be.a('string').and.not.empty;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				}
 			],
 			"description": "We will be testing all the users API with all the functionality mentioned."
@@ -708,6 +739,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"pm.collectionVariables.set('adminSenderID', pm.response.json().id);",
 									"pm.test(\"Status is 201 Created\", function () {",
 									"    pm.response.to.have.status(201);",
 									"});",
@@ -747,7 +779,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -803,7 +835,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -858,7 +890,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -901,7 +933,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1056,6 +1088,224 @@
 						"url": "{{base_url}}/coar_notify_inbox/senders/{{inactiveSenderID}}/activate"
 					},
 					"response": []
+				},
+				{
+					"name": "Get Sender by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders/{{adminSenderID}}"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"const s = pm.response.json();",
+									"pm.test('Returns correct sender', function () {",
+									"    pm.expect(s.id).to.eql(pm.collectionVariables.get('adminSenderID'));",
+									"    pm.expect(s.origin_uri).to.be.a('string');",
+									"    pm.expect(s.target_uris).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Sender",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders/{{adminSenderID}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"target_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://new-target.example/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('target_uris updated', function () {",
+									"    pm.expect(pm.response.json().target_uris).to.include('https://new-target.example/inbox/');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Sender - missing origin_uri (422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+									"pm.test('Error mentions origin_uri', function () {",
+									"    pm.expect(pm.response.json().error).to.include('origin_uri');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Sender - duplicate (409)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 409', function () { pm.response.to.have.status(409); });",
+									"pm.test('Error mentions already exists', function () {",
+									"    pm.expect(pm.response.json().error).to.include('already exists');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Sender - without target_uris (optional)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sender\": {\n    \"origin_uri\": \"https://optional-test.example/inbox/\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 - target_uris is optional', function () { pm.response.to.have.status(201); });",
+									"pm.test('target_uris defaults to empty array', function () {",
+									"    pm.expect(pm.response.json().target_uris).to.eql([]);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete Sender",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/senders/{{adminSenderID}}"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				}
 			]
 		},
@@ -1069,6 +1319,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"pm.collectionVariables.set('adminConsumerID', pm.response.json().id);",
 									"pm.test(\"Status is 201 Created\", function () {",
 									"    pm.response.to.have.status(201);",
 									"});",
@@ -1108,7 +1359,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\",\n    \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1164,7 +1415,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{defaultUsername}}\",\n    \"consumer\": {\n        \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n        \"active\": true\n    },\n    \"origin_uris\": [\n        \"https://research-organisation.org/inbox/\",\n        \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ]\n}",
+							"raw": "{\n  \"username\": \"{{defaultUsername}}\",\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://evolbiol.peercommunityin.org/coar_notify/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1218,7 +1469,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"origin_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1261,7 +1512,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"consumer\": {\n    \"origin_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  },\n  \"target_uris\": [\n    \"https://research-organisation.org/inbox/\"\n  ]\n}\n",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1416,6 +1667,224 @@
 						"url": "{{base_url}}/coar_notify_inbox/consumers/{{inactiveConsumerID}}/activate"
 					},
 					"response": []
+				},
+				{
+					"name": "Get Consumer by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers/{{adminConsumerID}}"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"const c = pm.response.json();",
+									"pm.test('Returns correct consumer', function () {",
+									"    pm.expect(c.id).to.eql(pm.collectionVariables.get('adminConsumerID'));",
+									"    pm.expect(c.target_uri).to.be.a('string');",
+									"    pm.expect(c.origin_uris).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Consumer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers/{{adminConsumerID}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"origin_uris\": [\n      \"https://research-organisation.org/inbox/\",\n      \"https://new-origin.example/inbox/\"\n    ],\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('origin_uris updated', function () {",
+									"    pm.expect(pm.response.json().origin_uris).to.include('https://new-origin.example/inbox/');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Consumer - missing target_uri (422)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 422', function () { pm.response.to.have.status(422); });",
+									"pm.test('Error mentions target_uri', function () {",
+									"    pm.expect(pm.response.json().error).to.include('target_uri');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Consumer - duplicate (409)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"active\": true\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 409', function () { pm.response.to.have.status(409); });",
+									"pm.test('Error mentions already exists', function () {",
+									"    pm.expect(pm.response.json().error).to.include('already exists');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Consumer - without origin_uris (optional)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"consumer\": {\n    \"target_uri\": \"https://optional-consumer.example/inbox/\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 - origin_uris is optional', function () { pm.response.to.have.status(201); });",
+									"pm.test('origin_uris defaults to empty array', function () {",
+									"    pm.expect(pm.response.json().origin_uris).to.eql([]);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete Consumer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_admin_token}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/consumers/{{adminConsumerID}}"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 404', function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				}
 			]
 		},
@@ -1435,7 +1904,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"type\": \"Accept\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/objects/123\",\n    \"type\": \"Dataset\"\n  }\n}\n",
+							"raw": "{\n  \"type\": \"Accept\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/objects/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1444,7 +1913,28 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+									"const n = pm.response.json();",
+									"pm.test('Response has required fields', function () {",
+									"    pm.expect(n.id).to.be.a('number');",
+									"    pm.expect(n.origin_uri).to.be.a('string');",
+									"    pm.expect(n.target_uri).to.be.a('string');",
+									"    pm.expect(n.notification_type).to.be.a('string');",
+									"    pm.expect(n.created_at).to.be.a('string');",
+									"});",
+									"pm.collectionVariables.set('notificationOriginURI', n.origin_uri);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "Notification - Admin",
@@ -1459,7 +1949,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repo.example/object/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1468,7 +1958,26 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201', function () { pm.response.to.have.status(201); });",
+									"const n = pm.response.json();",
+									"pm.test('Response has required fields', function () {",
+									"    pm.expect(n.id).to.be.a('number');",
+									"    pm.expect(n.origin_uri).to.be.a('string');",
+									"    pm.expect(n.target_uri).to.be.a('string');",
+									"    pm.expect(n.notification_type).to.be.a('string');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "Invalid Notification",
@@ -1483,7 +1992,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {\n      \"inbox\": \"https://evolbiol1.peercommunityin.org/coar_notify/\"\n    },\n    \"target\": {\n      \"inbox\": \"https://research-organisation.org/inbox/\"\n    },\n    \"object\": {\n      \"id\": \"https://repo.example/object/123\",\n      \"type\": \"Dataset\"\n    }\n}\n",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {\n    \"inbox\": \"https://unknown-origin.example/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repo.example/object/123\",\n    \"type\": \"Dataset\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1492,7 +2001,22 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 403 - unregistered origin', function () { pm.response.to.have.status(403); });",
+									"pm.test('Error message is correct', function () {",
+									"    pm.expect(pm.response.json().error).to.include('Access denied');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "Invalid payload",
@@ -1507,7 +2031,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Offer\",\n    \"origin\": {},\n    \"target\": {}\n  }",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {},\n  \"target\": {}\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1516,7 +2040,22 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 422 - missing fields', function () { pm.response.to.have.status(422); });",
+									"pm.test('Response has error', function () {",
+									"    pm.expect(pm.response.json().error).to.be.a('string');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "All Notifications - User",
@@ -1543,7 +2082,22 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('Response is an array', function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "All Notifications - Admin",
@@ -1570,7 +2124,23 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('Admin sees all notifications', function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"    pm.expect(pm.response.json().length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				},
 				{
 					"name": "Type URI",
@@ -1597,7 +2167,97 @@
 						},
 						"url": "{{base_url}}/coar_notify_inbox/notifications/sender/https://evolbiol.peercommunityin.org/coar_notify"
 					},
-					"response": []
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+									"pm.test('Response is an array', function () {",
+									"    pm.expect(pm.response.json()).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Notification - using origin.id format",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/notifications",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": [\n    \"Offer\",\n    \"coar-notify:ReviewAction\"\n  ],\n  \"id\": \"urn:uuid:abc12345-1234-1234-1234-abc123456789\",\n  \"origin\": {\n    \"id\": \"https://evolbiol.peercommunityin.org/coar_notify/\",\n    \"type\": \"Service\"\n  },\n  \"target\": {\n    \"id\": \"https://research-organisation.org/inbox/\",\n    \"type\": \"Service\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/preprint/456\",\n    \"type\": \"Dataset\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 - origin.id format accepted', function () { pm.response.to.have.status(201); });",
+									"pm.test('origin_uri matches sender', function () {",
+									"    pm.expect(pm.response.json().origin_uri).to.eql('https://evolbiol.peercommunityin.org/coar_notify/');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
+				},
+				{
+					"name": "Notification - sender not active check (still accepted)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{active_user_token}}"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "{{base_url}}/coar_notify_inbox/notifications",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Offer\",\n  \"origin\": {\n    \"inbox\": \"https://evolbiol.peercommunityin.org/coar_notify/\"\n  },\n  \"target\": {\n    \"inbox\": \"https://research-organisation.org/inbox/\"\n  },\n  \"object\": {\n    \"id\": \"https://repository.example/preprint/789\",\n    \"type\": \"Dataset\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 - no active check on sender', function () { pm.response.to.have.status(201); });"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					]
 				}
 			]
 		}
@@ -1692,6 +2352,21 @@
 		},
 		{
 			"key": "inactiveConsumerID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminSenderID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminConsumerID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationOriginURI",
 			"value": "",
 			"type": "string"
 		}

@@ -6,75 +6,42 @@ module CoarNotifyInbox
 
     # ------------------------------------------------------------
     # POST /notifications
-    #
-    # Append-only notification inbox.
     # ------------------------------------------------------------
     def create
-      # ----------------------------------------------------------
-      # 1. Parse RAW JSON body (do NOT use params)
-      # ----------------------------------------------------------
       begin
         raw_payload = JSON.parse(request.raw_post)
       rescue JSON::ParserError
-        return render json: {
-          error: "Invalid JSON payload"
-        }, status: :unprocessable_entity
+        return render json: { error: "Invalid JSON payload" }, status: :unprocessable_entity
       end
 
-      # ----------------------------------------------------------
-      # 2. Basic required-field validation
-      # ----------------------------------------------------------
-      unless raw_payload["type"].present? &&
-             raw_payload.dig("origin", "id").present? &&
-             raw_payload.dig("target", "id").present?
+      # Resolve origin and target URIs — accept id or inbox, prefer id
+      origin_uri = resolve_uri(raw_payload, "origin")
+      target_uri = resolve_uri(raw_payload, "target")
+
+      unless raw_payload["type"].present? && origin_uri.present? && target_uri.present?
         return render json: {
           error: "Invalid COAR Notify payload",
-          details: "Missing required fields: type, origin.id, target.id"
+          details: "Missing required fields: type, and origin/target with id or inbox"
         }, status: :unprocessable_entity
       end
 
-      # ----------------------------------------------------------
-      # 3. Normalize URIs
-      # ----------------------------------------------------------
-      origin_uri = raw_payload.dig("origin", "id").to_s.strip
-      target_uri = raw_payload.dig("target", "id").to_s.strip
-
-      # ----------------------------------------------------------
-      # 4. Validate URIs using coarnotify helpers (CORRECT USAGE)
-      # ----------------------------------------------------------
       begin
         Coarnotify::Validate.absolute_uri(nil, origin_uri)
         Coarnotify::Validate.absolute_uri(nil, target_uri)
       rescue ArgumentError => e
-        return render json: {
-          error: "Invalid COAR Notify payload",
-          details: e.message
-        }, status: :unprocessable_entity
+        return render json: { error: "Invalid COAR Notify payload", details: e.message }, status: :unprocessable_entity
       end
 
-      # ----------------------------------------------------------
-      # 5. Enforce sender ownership (hard check)
-      # ----------------------------------------------------------
       username = current_user.username
 
-      unless CoarNotifyInbox::Sender.exists?(username: username, origin_uri: origin_uri)
-        return render json: {
-          error: "Access denied: origin URI not registered for this user"
-        }, status: :forbidden
+      sender = CoarNotifyInbox::Sender.find_by(username: username, origin_uri: origin_uri)
+      unless sender
+        return render json: { error: "Access denied: origin URI not registered for this user" }, status: :forbidden
       end
 
-      # ----------------------------------------------------------
-      # 6. Notification type (auto-managed)
-      # ----------------------------------------------------------
       type_name = Array(raw_payload["type"]).join(", ")
-      notification_type =
-        CoarNotifyInbox::NotificationType.find_or_create_by!(
-          name: type_name
-        )
+      notification_type = CoarNotifyInbox::NotificationType.find_or_create_by!(name: type_name)
 
-      # ----------------------------------------------------------
-      # 7. Create notification (append-only)
-      # ----------------------------------------------------------
       notification = CoarNotifyInbox::Notification.new(
         username: username,
         origin_uri: origin_uri,
@@ -84,8 +51,11 @@ module CoarNotifyInbox
       )
 
       if notification.save
-        # Keep reverse index updated
         notification_type.append_notification_id!(notification.id)
+
+        # Auto-populate sender target_uris and consumer origin_uris from this notification
+        populate_sender_target_uris(sender, target_uri)
+        populate_consumer_origin_uris(origin_uri, target_uri)
 
         render json: {
           id: notification.id,
@@ -96,9 +66,7 @@ module CoarNotifyInbox
           created_at: notification.created_at
         }, status: :created
       else
-        render json: {
-          errors: notification.errors.full_messages
-        }, status: :unprocessable_entity
+        render json: { errors: notification.errors.full_messages }, status: :unprocessable_entity
       end
     end
 
@@ -121,13 +89,8 @@ module CoarNotifyInbox
     # ------------------------------------------------------------
     def by_endpoint
       type = params[:type]
-
       raw_uri = params[:uri].to_s
-
-      # Step 1: Decode if encoded
       decoded_uri = CGI.unescape(raw_uri)
-
-      # Step 2: Normalize malformed scheme (Rails path parsing issue)
       normalized_uri =
         decoded_uri.sub(/\Ahttps:\//, "https://")
                   .sub(/\Ahttp:\//, "http://")
@@ -140,17 +103,36 @@ module CoarNotifyInbox
         when "consumer"
           CoarNotifyInbox::Notification.by_target(normalized_uri)
         else
-          return render json: {
-            error: "Invalid type. Must be 'sender' or 'consumer'."
-          }, status: :unprocessable_entity
+          return render json: { error: "Invalid type. Must be 'sender' or 'consumer'." }, status: :unprocessable_entity
         end
 
-      notifications =
-        notifications.where(username: current_user.username) unless current_user.admin?
-
+      notifications = notifications.where(username: current_user.username) unless current_user.admin?
 
       render json: notifications.order(created_at: :desc), status: :ok
     end
 
+    private
+
+    def resolve_uri(payload, key)
+      uri = payload.dig(key, "id").to_s.strip
+      uri = payload.dig(key, "inbox").to_s.strip if uri.blank?
+      uri.presence
+    end
+
+    def populate_sender_target_uris(sender, target_uri)
+      return if sender.target_uris.include?(target_uri)
+      sender.update(target_uris: sender.target_uris | [target_uri])
+    rescue => e
+      Rails.logger.error("[NotificationsController] failed to update sender target_uris: #{e.class} #{e.message}")
+    end
+
+    def populate_consumer_origin_uris(origin_uri, target_uri)
+      CoarNotifyInbox::Consumer.where(target_uri: target_uri).find_each do |consumer|
+        next if consumer.origin_uris.include?(origin_uri)
+        consumer.update(origin_uris: consumer.origin_uris | [origin_uri])
+      end
+    rescue => e
+      Rails.logger.error("[NotificationsController] failed to update consumer origin_uris: #{e.class} #{e.message}")
+    end
   end
 end
