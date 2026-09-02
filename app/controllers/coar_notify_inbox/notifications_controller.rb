@@ -9,8 +9,10 @@ module CoarNotifyInbox
     # ------------------------------------------------------------
     def create
       begin
+        Rails.logger.info("[NotificationsController] Received COAR Notify payload: #{request.raw_post}")
         raw_payload = JSON.parse(request.raw_post)
       rescue JSON::ParserError
+        Rails.logger.error("[NotificationsController] Invalid JSON payload")
         return render json: { error: "Invalid JSON payload" }, status: :unprocessable_entity
       end
 
@@ -18,7 +20,11 @@ module CoarNotifyInbox
       origin_uri = resolve_uri(raw_payload, "origin")
       target_uri = resolve_uri(raw_payload, "target")
 
+      Rails.logger.info("[NotificationsController] Resolved origin_uri: #{origin_uri}, target_uri: #{target_uri}")
+      Rails.logger.info("[NotificationsController] Notification type: #{raw_payload['type']}")
       unless raw_payload["type"].present? && origin_uri.present? && target_uri.present?
+
+        Rails.logger.error("[NotificationsController] Missing required fields in COAR Notify payload (type, origin/target with id or inbox)")
         return render json: {
           error: "Invalid COAR Notify payload",
           details: "Missing required fields: type, and origin/target with id or inbox"
@@ -29,6 +35,7 @@ module CoarNotifyInbox
         Coarnotify::Validate.absolute_uri(nil, origin_uri)
         Coarnotify::Validate.absolute_uri(nil, target_uri)
       rescue ArgumentError => e
+        Rails.logger.error("[NotificationsController] Invalid URI in COAR Notify payload: #{e.message}")
         return render json: { error: "Invalid COAR Notify payload", details: e.message }, status: :unprocessable_entity
       end
 
@@ -36,12 +43,14 @@ module CoarNotifyInbox
 
       sender = CoarNotifyInbox::Sender.find_by(username: username, origin_uri: origin_uri)
       unless sender
+        Rails.logger.error("[NotificationsController] Access denied: origin URI not registered for this user")
         return render json: { error: "Access denied: origin URI not registered for this user" }, status: :forbidden
       end
 
       type_name = Array(raw_payload["type"]).join(", ")
       notification_type = CoarNotifyInbox::NotificationType.find_or_create_by!(name: type_name)
 
+      Rails.logger.info("[NotificationsController] Creating notification for user: #{username}, origin_uri: #{origin_uri}, target_uri: #{target_uri}, type: #{type_name}")
       notification = CoarNotifyInbox::Notification.new(
         username: username,
         origin_uri: origin_uri,
@@ -53,6 +62,7 @@ module CoarNotifyInbox
       if notification.save
         notification_type.append_notification_id!(notification.id)
 
+        Rails.logger.info("[NotificationsController] Notification created successfully: #{notification.id}")
         # Auto-populate sender target_uris and consumer origin_uris from this notification
         populate_sender_target_uris(sender, target_uri)
         populate_consumer_origin_uris(origin_uri, target_uri)
@@ -66,6 +76,7 @@ module CoarNotifyInbox
           created_at: notification.created_at
         }, status: :created
       else
+        Rails.logger.error("[NotificationsController] Failed to create notification: #{notification.errors.full_messages.join(', ')}")
         render json: { errors: notification.errors.full_messages }, status: :unprocessable_entity
       end
     end
