@@ -40,7 +40,7 @@ module CoarNotifyInbox
       end
 
       username = current_user.username
-
+      Rails.logger.info("[NotificationsController] Processing notification for user: #{username}")
       sender = CoarNotifyInbox::Sender.find_by(username: username, origin_uri: origin_uri)
       unless sender
         Rails.logger.error("[NotificationsController] Access denied: origin URI not registered for this user")
