@@ -20,6 +20,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 6.0", "< 9.0"
   spec.add_dependency "cancancan", "~> 3.5"
-  spec.add_development_dependency "rspec-rails", "~> 6.0"
+  spec.add_development_dependency "rspec-rails", "~> 8.1"
   spec.add_dependency "coarnotify", ">= 0.0.1"
 end
